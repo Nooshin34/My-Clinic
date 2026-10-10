@@ -1,0 +1,69 @@
+<header class="page-head">
+  <div>
+    <p class="eyebrow">امروز، {{ today }}</p>
+    <h1>داشبورد پذیرش</h1>
+  </div>
+  <a class="button" routerLink="/appointments">نوبت تازه</a>
+</header>
+
+@if (error()) {
+  <p class="banner">{{ error() }}</p>
+}
+
+<section class="stats">
+  <article class="stat-patients">
+    <span>بیماران</span>
+    <strong>{{ data()?.patientCount ?? '—' }}</strong>
+  </article>
+  <article class="stat-doctors">
+    <span>پزشکان</span>
+    <strong>{{ data()?.doctorCount ?? '—' }}</strong>
+  </article>
+  <article class="stat-today">
+    <span>نوبت‌های امروز</span>
+    <strong>{{ data()?.todayAppointmentCount ?? '—' }}</strong>
+  </article>
+  <article class="stat-open">
+    <span>نوبت‌های باز</span>
+    <strong>{{ data()?.scheduledAppointmentCount ?? '—' }}</strong>
+  </article>
+</section>
+
+<section class="panel-card">
+  <div class="section-title">
+    <h2>برنامه امروز</h2>
+  </div>
+  @if (loading()) {
+    <p class="muted">در حال خواندن نوبت‌ها...</p>
+  } @else if (!data()?.todayAppointments?.length) {
+    <p class="muted">برای امروز نوبتی ثبت نشده است.</p>
+  } @else {
+    <table>
+      <thead>
+        <tr>
+          <th>ساعت</th>
+          <th>بیمار</th>
+          <th>پزشک</th>
+          <th>دلیل</th>
+          <th>وضعیت</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (item of data()!.todayAppointments; track item.id) {
+          <tr>
+            <td>{{ when(item.scheduledAtUtc) }}</td>
+            <td>{{ item.patientName }}</td>
+            <td>
+              <span class="specialty">
+                <app-specialty-mark [specialty]="item.doctorSpecialty" />
+                {{ item.doctorName }} · {{ item.doctorSpecialty }}
+              </span>
+            </td>
+            <td>{{ item.reason }}</td>
+            <td><span class="pill" [class.Completed]="item.status === 'Completed'" [class.Cancelled]="item.status === 'Cancelled'">{{ status(item.status) }}</span></td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  }
+</section>

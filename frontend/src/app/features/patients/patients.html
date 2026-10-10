@@ -1,0 +1,91 @@
+<header class="page-head">
+  <div>
+    <p class="eyebrow">پرونده‌ها</p>
+    <h1>بیماران</h1>
+  </div>
+  <button class="button" type="button" (click)="openCreate()">بیمار جدید</button>
+</header>
+
+<form class="toolbar" (submit)="$event.preventDefault(); load()">
+  <input [value]="search()" (input)="onSearch($event)" placeholder="نام، کد ملی یا تلفن" />
+  <button class="button secondary" type="submit">جستجو</button>
+</form>
+
+@if (error()) {
+  <p class="banner">{{ error() }}</p>
+}
+
+<section class="panel-card">
+  @if (loading()) {
+    <p class="muted">در حال خواندن فهرست...</p>
+  } @else if (!patients().length) {
+    <p class="muted">بیماری با این مشخصات پیدا نشد.</p>
+  } @else {
+    <table>
+      <thead>
+        <tr>
+          <th>نام</th>
+          <th>کد ملی</th>
+          <th>تلفن</th>
+          <th>جنسیت</th>
+          <th>تاریخ تولد</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (patient of patients(); track patient.id) {
+          <tr>
+            <td>
+              <span class="specialty">
+                <app-gender-mark [gender]="patient.gender" />
+                {{ name(patient.firstName, patient.lastName) }}
+              </span>
+            </td>
+            <td>{{ patient.nationalId }}</td>
+            <td>{{ patient.phone }}</td>
+            <td>
+              <span class="specialty">
+                <app-gender-mark [gender]="patient.gender" />
+                {{ gender(patient.gender) }}
+              </span>
+            </td>
+            <td>{{ patient.dateOfBirth }}</td>
+            <td class="actions">
+              <button type="button" (click)="openEdit(patient)">ویرایش</button>
+              <button type="button" class="danger" (click)="remove(patient)">حذف</button>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  }
+</section>
+
+@if (editorOpen()) {
+  <div class="backdrop" (click)="close()">
+    <form class="dialog" [formGroup]="form" (click)="$event.stopPropagation()" (ngSubmit)="save()">
+      <h2>{{ editingId() ? 'ویرایش بیمار' : 'بیمار جدید' }}</h2>
+      <label>نام <input formControlName="firstName" /></label>
+      <label>نام خانوادگی <input formControlName="lastName" /></label>
+      <label>کد ملی <input formControlName="nationalId" maxlength="10" /></label>
+      <label>تلفن <input formControlName="phone" /></label>
+      <label>تاریخ تولد <input type="date" formControlName="dateOfBirth" /></label>
+      <label>
+        جنسیت
+        <span class="specialty-field">
+          <app-gender-mark [gender]="form.controls.gender.value" />
+          <select formControlName="gender">
+            <option value="Female">زن</option>
+            <option value="Male">مرد</option>
+            <option value="Unknown">نامشخص</option>
+          </select>
+        </span>
+      </label>
+      <label>آدرس <textarea formControlName="address" rows="3"></textarea></label>
+      <div class="dialog-actions">
+        <button class="button secondary" type="button" (click)="close()">انصراف</button>
+        <button class="button" type="submit" [disabled]="saving()">{{ saving() ? 'در حال ذخیره...' : 'ذخیره' }}</button>
+      </div>
+    </form>
+  </div>
+}

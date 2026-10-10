@@ -1,0 +1,81 @@
+<header class="page-head">
+  <div>
+    <p class="eyebrow">کادر درمان</p>
+    <h1>پزشکان</h1>
+  </div>
+  <button class="button" type="button" (click)="openCreate()">پزشک جدید</button>
+</header>
+
+<form class="toolbar" (submit)="$event.preventDefault(); load()">
+  <input [value]="search()" (input)="onSearch($event)" placeholder="نام، تخصص یا شماره نظام" />
+  <button class="button secondary" type="submit">جستجو</button>
+</form>
+
+@if (error()) {
+  <p class="banner">{{ error() }}</p>
+}
+
+<section class="panel-card">
+  @if (loading()) {
+    <p class="muted">در حال خواندن فهرست...</p>
+  } @else if (!doctors().length) {
+    <p class="muted">پزشکی با این مشخصات پیدا نشد.</p>
+  } @else {
+    <table>
+      <thead>
+        <tr>
+          <th>نام</th>
+          <th>تخصص</th>
+          <th>شماره نظام</th>
+          <th>تلفن</th>
+          <th>ایمیل</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (doctor of doctors(); track doctor.id) {
+          <tr>
+            <td>{{ name(doctor.firstName, doctor.lastName) }}</td>
+            <td>
+              <span class="specialty">
+                <app-specialty-mark [specialty]="doctor.specialty" />
+                {{ doctor.specialty }}
+              </span>
+            </td>
+            <td>{{ doctor.licenseNumber }}</td>
+            <td>{{ doctor.phone }}</td>
+            <td>{{ doctor.email }}</td>
+            <td class="actions">
+              <button type="button" (click)="openEdit(doctor)">ویرایش</button>
+              <button type="button" class="danger" (click)="remove(doctor)">حذف</button>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  }
+</section>
+
+@if (editorOpen()) {
+  <div class="backdrop" (click)="close()">
+    <form class="dialog" [formGroup]="form" (click)="$event.stopPropagation()" (ngSubmit)="save()">
+      <h2>{{ editingId() ? 'ویرایش پزشک' : 'پزشک جدید' }}</h2>
+      <label>نام <input formControlName="firstName" /></label>
+      <label>نام خانوادگی <input formControlName="lastName" /></label>
+      <label>
+        تخصص
+        <span class="specialty-field">
+          <app-specialty-mark [specialty]="form.controls.specialty.value" />
+          <input formControlName="specialty" />
+        </span>
+      </label>
+      <label>شماره نظام پزشکی <input formControlName="licenseNumber" /></label>
+      <label>تلفن <input formControlName="phone" /></label>
+      <label>ایمیل <input type="email" formControlName="email" /></label>
+      <div class="dialog-actions">
+        <button class="button secondary" type="button" (click)="close()">انصراف</button>
+        <button class="button" type="submit" [disabled]="saving()">{{ saving() ? 'در حال ذخیره...' : 'ذخیره' }}</button>
+      </div>
+    </form>
+  </div>
+}

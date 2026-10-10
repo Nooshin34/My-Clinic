@@ -1,0 +1,104 @@
+<header class="page-head">
+  <div>
+    <p class="eyebrow">زمان‌بندی</p>
+    <h1>نوبت‌ها</h1>
+  </div>
+  <button class="button" type="button" (click)="openCreate()">نوبت جدید</button>
+</header>
+
+<form class="toolbar" (submit)="$event.preventDefault(); load()">
+  <input [value]="search()" (input)="onSearch($event)" placeholder="نام بیمار، پزشک یا دلیل مراجعه" />
+  <button class="button secondary" type="submit">جستجو</button>
+</form>
+
+@if (error()) {
+  <p class="banner">{{ error() }}</p>
+}
+
+<section class="panel-card">
+  @if (loading()) {
+    <p class="muted">در حال خواندن نوبت‌ها...</p>
+  } @else if (!appointments().length) {
+    <p class="muted">نوبتی پیدا نشد.</p>
+  } @else {
+    <table>
+      <thead>
+        <tr>
+          <th>زمان</th>
+          <th>بیمار</th>
+          <th>پزشک</th>
+          <th>دلیل</th>
+          <th>وضعیت</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (item of appointments(); track item.id) {
+          <tr>
+            <td>{{ when(item.scheduledAtUtc) }}</td>
+            <td>{{ item.patientName }}</td>
+            <td>
+              <span class="specialty">
+                <app-specialty-mark [specialty]="item.doctorSpecialty" />
+                {{ item.doctorName }} · {{ item.doctorSpecialty }}
+              </span>
+            </td>
+            <td>{{ item.reason }}</td>
+            <td><span class="pill" [class.Completed]="item.status === 'Completed'" [class.Cancelled]="item.status === 'Cancelled'">{{ status(item.status) }}</span></td>
+            <td class="actions">
+              <button type="button" (click)="openEdit(item)">ویرایش</button>
+              <button type="button" class="danger" (click)="remove(item)">حذف</button>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  }
+</section>
+
+@if (editorOpen()) {
+  <div class="backdrop" (click)="close()">
+    <form class="dialog" [formGroup]="form" (click)="$event.stopPropagation()" (ngSubmit)="save()">
+      <h2>{{ editingId() ? 'ویرایش نوبت' : 'نوبت جدید' }}</h2>
+      <label>
+        بیمار
+        <select formControlName="patientId">
+          <option value="">انتخاب کنید</option>
+          @for (patient of patients(); track patient.id) {
+            <option [value]="patient.id">{{ name(patient.firstName, patient.lastName) }}</option>
+          }
+        </select>
+      </label>
+      <label>
+        پزشک
+        <select formControlName="doctorId">
+          <option value="">انتخاب کنید</option>
+          @for (doctor of doctors(); track doctor.id) {
+            <option [value]="doctor.id">{{ name(doctor.firstName, doctor.lastName) }} · {{ doctor.specialty }}</option>
+          }
+        </select>
+        @if (selectedSpecialty(); as specialty) {
+          <span class="specialty">
+            <app-specialty-mark [specialty]="specialty" />
+            {{ specialty }}
+          </span>
+        }
+      </label>
+      <label>زمان <input type="datetime-local" formControlName="scheduledAt" /></label>
+      <label>دلیل مراجعه <input formControlName="reason" /></label>
+      <label>
+        وضعیت
+        <select formControlName="status">
+          <option value="Scheduled">برنامه‌ریزی‌شده</option>
+          <option value="Completed">انجام‌شده</option>
+          <option value="Cancelled">لغو‌شده</option>
+        </select>
+      </label>
+      <label>یادداشت <textarea formControlName="notes" rows="3"></textarea></label>
+      <div class="dialog-actions">
+        <button class="button secondary" type="button" (click)="close()">انصراف</button>
+        <button class="button" type="submit" [disabled]="saving()">{{ saving() ? 'در حال ذخیره...' : 'ذخیره' }}</button>
+      </div>
+    </form>
+  </div>
+}

@@ -1,0 +1,18 @@
+<span class="gender-mark" [attr.data-kind]="kind()" [attr.title]="kind() === 'female' ? 'زن' : kind() === 'male' ? 'مرد' : 'نامشخص'" aria-hidden="true">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+    @switch (kind()) {
+      @case ('female') {
+        <circle cx="12" cy="8.2" r="3.4" />
+        <path d="M12 11.6v7.6M9 15.8h6" />
+      }
+      @case ('male') {
+        <circle cx="10" cy="14.2" r="3.6" />
+        <path d="M12.6 11.6 18.2 6M14.4 6H18.2v3.8" />
+      }
+      @default {
+        <circle cx="12" cy="8" r="3" />
+        <path d="M6.8 19.2c.8-3.4 2.8-5.2 5.2-5.2s4.4 1.8 5.2 5.2" />
+      }
+    }
+  </svg>
+</span>

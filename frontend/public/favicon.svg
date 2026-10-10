@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="کلینیک من">
+  <defs>
+    <linearGradient id="bg" x1="8" y1="2" x2="58" y2="62" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#8EBEFF"/>
+      <stop offset="0.48" stop-color="#2F7AE8"/>
+      <stop offset="1" stop-color="#14398F"/>
+    </linearGradient>
+  </defs>
+  <rect width="64" height="64" rx="18" fill="url(#bg)"/>
+  <path d="M16 14c8-7 22-8 32-2" fill="none" stroke="#fff" stroke-opacity=".45" stroke-width="3" stroke-linecap="round"/>
+  <circle cx="32" cy="33" r="20" fill="none" stroke="#fff" stroke-opacity=".22" stroke-width="2"/>
+  <rect x="28" y="17" width="8" height="32" rx="4" fill="#fff"/>
+  <rect x="16" y="29" width="32" height="8" rx="4" fill="#fff"/>
+</svg>

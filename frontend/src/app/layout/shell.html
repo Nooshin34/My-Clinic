@@ -1,0 +1,20 @@
+<div class="shell">
+  <aside class="sidebar">
+    <div class="brand">
+      <img class="logo" src="favicon.svg" alt="">
+      <div>
+        <strong>کلینیک من</strong>
+        <small>پذیرش و نوبت‌دهی</small>
+      </div>
+    </div>
+    <nav>
+      <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">داشبورد</a>
+      <a routerLink="/patients" routerLinkActive="active">بیماران</a>
+      <a routerLink="/doctors" routerLinkActive="active">پزشکان</a>
+      <a routerLink="/appointments" routerLinkActive="active">نوبت‌ها</a>
+    </nav>
+  </aside>
+  <main class="content">
+    <router-outlet />
+  </main>
+</div>
