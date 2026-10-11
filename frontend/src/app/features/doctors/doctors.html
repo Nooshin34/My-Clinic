@@ -24,7 +24,7 @@
 
 <section class="panel-card">
   @if (loading()) {
-    <p class="muted">در حال خواندن فهرست...</p>
+    <app-list-loading />
   } @else if (!doctors().length) {
     <p class="muted">پزشکی با این مشخصات پیدا نشد.</p>
   } @else {

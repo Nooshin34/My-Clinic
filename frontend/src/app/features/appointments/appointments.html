@@ -24,7 +24,7 @@
 
 <section class="panel-card">
   @if (loading()) {
-    <p class="muted">در حال خواندن نوبت‌ها...</p>
+    <app-list-loading label="در حال خواندن نوبت‌ها..." />
   } @else if (!appointments().length) {
     <p class="muted">نوبتی پیدا نشد.</p>
   } @else {

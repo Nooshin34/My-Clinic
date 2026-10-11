@@ -4,11 +4,12 @@ import { ClinicApi } from '../../core/clinic-api';
 import { formatWhen, readApiError, statusLabel, todayShamsi } from '../../core/labels';
 import { Dashboard as DashboardData } from '../../core/models';
 import { specialtyLabel } from '../../core/specialty-visual';
+import { ListLoading } from '../../shared/list-loading/list-loading';
 import { SpecialtyMark } from '../../shared/specialty-mark/specialty-mark';
 
 @Component({
   selector: 'app-dashboard',
-  imports: [SpecialtyMark],
+  imports: [SpecialtyMark, ListLoading],
   templateUrl: './dashboard.html',
 })
 export class Dashboard {

@@ -255,6 +255,75 @@ th { color: var(--muted); font-weight: 600; font-size: 0.92rem; }
 .pager span { color: var(--muted); }
 .pager .button { padding: 8px 14px; }
 
+.list-loading {
+  padding: 8px 14px 18px;
+  display: grid;
+  gap: 8px;
+}
+.list-loading-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 52px;
+}
+.list-loading-head p { margin: 0; color: var(--muted); font-weight: 600; }
+.list-loading-mark {
+  width: 42px;
+  height: 42px;
+  flex: none;
+  display: grid;
+  place-items: center;
+  border-radius: 14px;
+  color: var(--accent);
+  background: #e7f0fd;
+  position: relative;
+}
+.list-loading-mark svg { width: 22px; height: 22px; }
+.list-loading-mark::after {
+  content: "";
+  position: absolute;
+  inset: -5px;
+  border-radius: 18px;
+  border: 2px solid rgba(29, 111, 224, 0.35);
+  animation: list-pulse 1.5s ease-out infinite;
+}
+.skeleton { display: grid; }
+.skeleton-row {
+  display: grid;
+  grid-template-columns: 1.5fr 1fr 0.8fr 0.7fr;
+  gap: 14px;
+  padding: 14px 2px;
+  border-top: 1px solid #e6edf7;
+}
+.skeleton-row span {
+  display: block;
+  height: 12px;
+  border-radius: 999px;
+  background: linear-gradient(100deg, #e4ecf8 20%, #f8fbff 45%, #d5e4f8 70%);
+  background-size: 220% 100%;
+  animation: list-shimmer 1.35s ease-in-out infinite;
+}
+.skeleton-row:nth-child(2) span { animation-delay: 0.12s; }
+.skeleton-row:nth-child(3) span { animation-delay: 0.24s; }
+.skeleton-row:nth-child(4) span { animation-delay: 0.36s; }
+.skeleton-row span:nth-child(4) { width: 62%; }
+@keyframes list-pulse {
+  from { transform: scale(0.88); opacity: 0.75; }
+  to { transform: scale(1.14); opacity: 0; }
+}
+@keyframes list-shimmer {
+  from { background-position: 120% 0; }
+  to { background-position: -120% 0; }
+}
+@media (max-width: 700px) {
+  .skeleton-row { grid-template-columns: 1.4fr 1fr; }
+  .skeleton-row span:nth-child(n + 3) { display: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .list-loading-mark::after,
+  .skeleton-row span { animation: none; }
+}
+
 .muted { color: var(--muted); padding: 18px; }
 .banner {
   background: #f8e8e6;

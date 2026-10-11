@@ -5,12 +5,13 @@ import { ClinicApi } from '../../core/clinic-api';
 import { formatBirthDate, fullName, readApiError } from '../../core/labels';
 import { Patient } from '../../core/models';
 import { GenderMark } from '../../shared/gender-mark/gender-mark';
+import { ListLoading } from '../../shared/list-loading/list-loading';
 import { Pager } from '../../shared/pager/pager';
 import { ShamsiDate } from '../../shared/shamsi-date/shamsi-date';
 
 @Component({
   selector: 'app-patients',
-  imports: [ReactiveFormsModule, GenderMark, ShamsiDate, Pager],
+  imports: [ReactiveFormsModule, GenderMark, ShamsiDate, Pager, ListLoading],
   templateUrl: './patients.html',
 })
 export class Patients {

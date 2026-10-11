@@ -1,0 +1,20 @@
+<div class="list-loading" role="status" aria-live="polite">
+  <div class="list-loading-head">
+    <span class="list-loading-mark" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M3 12h3.2l2-4.5 3.2 9 2.4-5.2 1.6 2.2H21" />
+      </svg>
+    </span>
+    <p>{{ label() }}</p>
+  </div>
+  <div class="skeleton" aria-hidden="true">
+    @for (row of rows; track row) {
+      <span class="skeleton-row">
+        <span></span>
+        <span></span>
+        <span></span>
+        <span></span>
+      </span>
+    }
+  </div>
+</div>

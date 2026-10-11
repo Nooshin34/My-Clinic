@@ -5,12 +5,13 @@ import { ClinicApi } from '../../core/clinic-api';
 import { fullName, readApiError } from '../../core/labels';
 import { Doctor, Specialty } from '../../core/models';
 import { specialtyLabel } from '../../core/specialty-visual';
+import { ListLoading } from '../../shared/list-loading/list-loading';
 import { Pager } from '../../shared/pager/pager';
 import { SpecialtyMark } from '../../shared/specialty-mark/specialty-mark';
 
 @Component({
   selector: 'app-doctors',
-  imports: [ReactiveFormsModule, SpecialtyMark, Pager],
+  imports: [ReactiveFormsModule, SpecialtyMark, Pager, ListLoading],
   templateUrl: './doctors.html',
 })
 export class Doctors {
