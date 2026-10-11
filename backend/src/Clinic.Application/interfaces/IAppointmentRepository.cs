@@ -1,3 +1,4 @@
+using Clinic.Application.Dtos;
 using Clinic.Domain.Entities;
 using Clinic.Domain.Enums;
 
@@ -5,7 +6,7 @@ namespace Clinic.Application.Interfaces;
 
 public interface IAppointmentRepository
 {
-    Task<IReadOnlyList<Appointment>> ListAsync(string? search, CancellationToken cancellationToken);
+    Task<PagedResult<Appointment>> ListAsync(string? search, int page, int pageSize, CancellationToken cancellationToken);
 
     Task<IReadOnlyList<Appointment>> ListBetweenAsync(DateTime fromUtc, DateTime toUtc, CancellationToken cancellationToken);
 

@@ -97,10 +97,8 @@ namespace Clinic.Infrastructure.Persistence.Migrations
                         .HasMaxLength(20)
                         .HasColumnType("character varying(20)");
 
-                    b.Property<string>("Specialty")
-                        .IsRequired()
-                        .HasMaxLength(80)
-                        .HasColumnType("character varying(80)");
+                    b.Property<Guid>("SpecialtyId")
+                        .HasColumnType("uuid");
 
                     b.HasKey("Id");
 
@@ -109,6 +107,8 @@ namespace Clinic.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("LicenseNumber")
                         .IsUnique();
+
+                    b.HasIndex("SpecialtyId");
 
                     b.ToTable("doctors", (string)null);
                 });
@@ -162,6 +162,156 @@ namespace Clinic.Infrastructure.Persistence.Migrations
                     b.ToTable("patients", (string)null);
                 });
 
+            modelBuilder.Entity("Clinic.Domain.Entities.Specialty", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(80)
+                        .HasColumnType("character varying(80)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Name")
+                        .IsUnique();
+
+                    b.ToTable("specialties", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("8f0a6c10-0001-4000-8000-000000000001"),
+                            CreatedAtUtc = new DateTime(2026, 10, 11, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Name = "پزشکی عمومی"
+                        },
+                        new
+                        {
+                            Id = new Guid("8f0a6c10-0001-4000-8000-000000000002"),
+                            CreatedAtUtc = new DateTime(2026, 10, 11, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Name = "قلب و عروق"
+                        },
+                        new
+                        {
+                            Id = new Guid("8f0a6c10-0001-4000-8000-000000000003"),
+                            CreatedAtUtc = new DateTime(2026, 10, 11, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Name = "کودکان"
+                        },
+                        new
+                        {
+                            Id = new Guid("8f0a6c10-0001-4000-8000-000000000004"),
+                            CreatedAtUtc = new DateTime(2026, 10, 11, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Name = "ارتوپدی"
+                        },
+                        new
+                        {
+                            Id = new Guid("8f0a6c10-0001-4000-8000-000000000005"),
+                            CreatedAtUtc = new DateTime(2026, 10, 11, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Name = "پوست"
+                        },
+                        new
+                        {
+                            Id = new Guid("8f0a6c10-0001-4000-8000-000000000006"),
+                            CreatedAtUtc = new DateTime(2026, 10, 11, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Name = "چشم"
+                        },
+                        new
+                        {
+                            Id = new Guid("8f0a6c10-0001-4000-8000-000000000007"),
+                            CreatedAtUtc = new DateTime(2026, 10, 11, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Name = "گوش و حلق و بینی"
+                        },
+                        new
+                        {
+                            Id = new Guid("8f0a6c10-0001-4000-8000-000000000008"),
+                            CreatedAtUtc = new DateTime(2026, 10, 11, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Name = "زنان و زایمان"
+                        },
+                        new
+                        {
+                            Id = new Guid("8f0a6c10-0001-4000-8000-000000000009"),
+                            CreatedAtUtc = new DateTime(2026, 10, 11, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Name = "مغز و اعصاب"
+                        },
+                        new
+                        {
+                            Id = new Guid("8f0a6c10-0001-4000-8000-00000000000a"),
+                            CreatedAtUtc = new DateTime(2026, 10, 11, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Name = "دندان‌پزشکی"
+                        },
+                        new
+                        {
+                            Id = new Guid("8f0a6c10-0001-4000-8000-00000000000b"),
+                            CreatedAtUtc = new DateTime(2026, 10, 11, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Name = "اورژانس"
+                        },
+                        new
+                        {
+                            Id = new Guid("8f0a6c10-0001-4000-8000-00000000000c"),
+                            CreatedAtUtc = new DateTime(2026, 10, 11, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Name = "روان‌پزشکی"
+                        },
+                        new
+                        {
+                            Id = new Guid("8f0a6c10-0001-4000-8000-00000000000d"),
+                            CreatedAtUtc = new DateTime(2026, 10, 11, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Name = "ریه"
+                        },
+                        new
+                        {
+                            Id = new Guid("8f0a6c10-0001-4000-8000-00000000000e"),
+                            CreatedAtUtc = new DateTime(2026, 10, 11, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Name = "گوارش"
+                        },
+                        new
+                        {
+                            Id = new Guid("8f0a6c10-0001-4000-8000-00000000000f"),
+                            CreatedAtUtc = new DateTime(2026, 10, 11, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Name = "کلیه و مجاری ادرار"
+                        },
+                        new
+                        {
+                            Id = new Guid("8f0a6c10-0001-4000-8000-000000000010"),
+                            CreatedAtUtc = new DateTime(2026, 10, 11, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Name = "غدد"
+                        },
+                        new
+                        {
+                            Id = new Guid("8f0a6c10-0001-4000-8000-000000000011"),
+                            CreatedAtUtc = new DateTime(2026, 10, 11, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Name = "عفونی"
+                        },
+                        new
+                        {
+                            Id = new Guid("8f0a6c10-0001-4000-8000-000000000012"),
+                            CreatedAtUtc = new DateTime(2026, 10, 11, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Name = "رادیولوژی"
+                        },
+                        new
+                        {
+                            Id = new Guid("8f0a6c10-0001-4000-8000-000000000013"),
+                            CreatedAtUtc = new DateTime(2026, 10, 11, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Name = "بیهوشی"
+                        },
+                        new
+                        {
+                            Id = new Guid("8f0a6c10-0001-4000-8000-000000000014"),
+                            CreatedAtUtc = new DateTime(2026, 10, 11, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Name = "جراحی"
+                        },
+                        new
+                        {
+                            Id = new Guid("8f0a6c10-0001-4000-8000-000000000015"),
+                            CreatedAtUtc = new DateTime(2026, 10, 11, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Name = "داخلی"
+                        });
+                });
+
             modelBuilder.Entity("Clinic.Domain.Entities.Appointment", b =>
                 {
                     b.HasOne("Clinic.Domain.Entities.Doctor", "Doctor")
@@ -183,12 +333,28 @@ namespace Clinic.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("Clinic.Domain.Entities.Doctor", b =>
                 {
+                    b.HasOne("Clinic.Domain.Entities.Specialty", "Specialty")
+                        .WithMany("Doctors")
+                        .HasForeignKey("SpecialtyId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Specialty");
+                });
+
+            modelBuilder.Entity("Clinic.Domain.Entities.Doctor", b =>
+                {
                     b.Navigation("Appointments");
                 });
 
             modelBuilder.Entity("Clinic.Domain.Entities.Patient", b =>
                 {
                     b.Navigation("Appointments");
+                });
+
+            modelBuilder.Entity("Clinic.Domain.Entities.Specialty", b =>
+                {
+                    b.Navigation("Doctors");
                 });
 #pragma warning restore 612, 618
         }

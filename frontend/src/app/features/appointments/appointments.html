@@ -6,9 +6,16 @@
   <button class="button" type="button" (click)="openCreate()">نوبت جدید</button>
 </header>
 
-<form class="toolbar" (submit)="$event.preventDefault(); load()">
-  <input [value]="search()" (input)="onSearch($event)" placeholder="نام بیمار، پزشک یا دلیل مراجعه" />
-  <button class="button secondary" type="submit">جستجو</button>
+<form class="toolbar" (submit)="$event.preventDefault(); searchList()">
+  <label class="search-field">
+    <input [value]="search()" (input)="onSearch($event)" placeholder="نام بیمار، پزشک یا دلیل مراجعه" />
+    <button type="submit" aria-label="جستجو">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
+        <circle cx="11" cy="11" r="6.5" />
+        <path d="M16 16.5 20 20.5" />
+      </svg>
+    </button>
+  </label>
 </form>
 
 @if (error()) {
@@ -40,7 +47,7 @@
             <td>
               <span class="specialty">
                 <app-specialty-mark [specialty]="item.doctorSpecialty" />
-                {{ item.doctorName }} · {{ item.doctorSpecialty }}
+                {{ item.doctorName }} · {{ specialtyName(item.doctorSpecialty) }}
               </span>
             </td>
             <td>{{ item.reason }}</td>
@@ -53,6 +60,7 @@
         }
       </tbody>
     </table>
+    <app-pager [page]="page()" [totalPages]="totalPages()" (pageChange)="goTo($event)" />
   }
 </section>
 
@@ -61,7 +69,7 @@
     <form class="dialog" [formGroup]="form" (click)="$event.stopPropagation()" (ngSubmit)="save()">
       <h2>{{ editingId() ? 'ویرایش نوبت' : 'نوبت جدید' }}</h2>
       <label>
-        بیمار
+        <span class="field-label required">بیمار</span>
         <select formControlName="patientId">
           <option value="">انتخاب کنید</option>
           @for (patient of patients(); track patient.id) {
@@ -70,24 +78,24 @@
         </select>
       </label>
       <label>
-        پزشک
+        <span class="field-label required">پزشک</span>
         <select formControlName="doctorId">
           <option value="">انتخاب کنید</option>
           @for (doctor of doctors(); track doctor.id) {
-            <option [value]="doctor.id">{{ name(doctor.firstName, doctor.lastName) }} · {{ doctor.specialty }}</option>
+            <option [value]="doctor.id">{{ name(doctor.firstName, doctor.lastName) }} · {{ specialtyName(doctor.specialty) }}</option>
           }
         </select>
         @if (selectedSpecialty(); as specialty) {
           <span class="specialty">
             <app-specialty-mark [specialty]="specialty" />
-            {{ specialty }}
+            {{ specialtyName(specialty) }}
           </span>
         }
       </label>
-      <label>زمان <input type="datetime-local" formControlName="scheduledAt" /></label>
-      <label>دلیل مراجعه <input formControlName="reason" /></label>
+      <label><span class="field-label required">زمان</span> <app-shamsi-date formControlName="scheduledAt" [withTime]="true" /></label>
+      <label><span class="field-label required">دلیل مراجعه</span> <input formControlName="reason" /></label>
       <label>
-        وضعیت
+        <span class="field-label required">وضعیت</span>
         <select formControlName="status">
           <option value="Scheduled">برنامه‌ریزی‌شده</option>
           <option value="Completed">انجام‌شده</option>

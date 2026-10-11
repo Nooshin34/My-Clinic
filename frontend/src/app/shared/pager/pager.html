@@ -1,0 +1,5 @@
+<nav class="pager" aria-label="صفحه‌بندی">
+  <button type="button" class="button secondary" [disabled]="page() <= 1" (click)="go(page() - 1)">قبلی</button>
+  <span>صفحه {{ page() }} از {{ totalPages() }}</span>
+  <button type="button" class="button secondary" [disabled]="page() >= totalPages()" (click)="go(page() + 1)">بعدی</button>
+</nav>

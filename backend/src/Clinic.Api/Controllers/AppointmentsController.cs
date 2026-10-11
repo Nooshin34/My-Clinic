@@ -9,8 +9,12 @@ namespace Clinic.Api.Controllers;
 public class AppointmentsController(IAppointmentService appointments) : ControllerBase
 {
     [HttpGet]
-    public async Task<ActionResult<IReadOnlyList<AppointmentDto>>> GetAll([FromQuery] string? search, CancellationToken cancellationToken) =>
-        Ok(await appointments.GetAllAsync(search, cancellationToken));
+    public async Task<ActionResult<PagedResult<AppointmentDto>>> GetAll(
+        [FromQuery] string? search,
+        [FromQuery] int page,
+        [FromQuery] int pageSize,
+        CancellationToken cancellationToken) =>
+        Ok(await appointments.GetAllAsync(search, page, pageSize, cancellationToken));
 
     [HttpGet("{id:guid}")]
     public async Task<ActionResult<AppointmentDto>> GetById(Guid id, CancellationToken cancellationToken) =>

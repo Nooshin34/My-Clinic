@@ -9,6 +9,8 @@ public class ClinicDbContext(DbContextOptions<ClinicDbContext> options) : DbCont
 
     public DbSet<Doctor> Doctors => Set<Doctor>();
 
+    public DbSet<Specialty> Specialties => Set<Specialty>();
+
     public DbSet<Appointment> Appointments => Set<Appointment>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)

@@ -6,9 +6,16 @@
   <button class="button" type="button" (click)="openCreate()">بیمار جدید</button>
 </header>
 
-<form class="toolbar" (submit)="$event.preventDefault(); load()">
-  <input [value]="search()" (input)="onSearch($event)" placeholder="نام، کد ملی یا تلفن" />
-  <button class="button secondary" type="submit">جستجو</button>
+<form class="toolbar" (submit)="$event.preventDefault(); searchList()">
+  <label class="search-field">
+    <input [value]="search()" (input)="onSearch($event)" placeholder="نام، کد ملی یا تلفن" />
+    <button type="submit" aria-label="جستجو">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
+        <circle cx="11" cy="11" r="6.5" />
+        <path d="M16 16.5 20 20.5" />
+      </svg>
+    </button>
+  </label>
 </form>
 
 @if (error()) {
@@ -35,21 +42,11 @@
       <tbody>
         @for (patient of patients(); track patient.id) {
           <tr>
-            <td>
-              <span class="specialty">
-                <app-gender-mark [gender]="patient.gender" />
-                {{ name(patient.firstName, patient.lastName) }}
-              </span>
-            </td>
+            <td>{{ name(patient.firstName, patient.lastName) }}</td>
             <td>{{ patient.nationalId }}</td>
             <td>{{ patient.phone }}</td>
-            <td>
-              <span class="specialty">
-                <app-gender-mark [gender]="patient.gender" />
-                {{ gender(patient.gender) }}
-              </span>
-            </td>
-            <td>{{ patient.dateOfBirth }}</td>
+            <td><app-gender-mark [gender]="patient.gender" [labelled]="true" /></td>
+            <td>{{ birthDate(patient.dateOfBirth) }}</td>
             <td class="actions">
               <button type="button" (click)="openEdit(patient)">ویرایش</button>
               <button type="button" class="danger" (click)="remove(patient)">حذف</button>
@@ -58,6 +55,7 @@
         }
       </tbody>
     </table>
+    <app-pager [page]="page()" [totalPages]="totalPages()" (pageChange)="goTo($event)" />
   }
 </section>
 
@@ -65,13 +63,13 @@
   <div class="backdrop" (click)="close()">
     <form class="dialog" [formGroup]="form" (click)="$event.stopPropagation()" (ngSubmit)="save()">
       <h2>{{ editingId() ? 'ویرایش بیمار' : 'بیمار جدید' }}</h2>
-      <label>نام <input formControlName="firstName" /></label>
-      <label>نام خانوادگی <input formControlName="lastName" /></label>
-      <label>کد ملی <input formControlName="nationalId" maxlength="10" /></label>
-      <label>تلفن <input formControlName="phone" /></label>
-      <label>تاریخ تولد <input type="date" formControlName="dateOfBirth" /></label>
+      <label><span class="field-label required">نام</span> <input formControlName="firstName" /></label>
+      <label><span class="field-label required">نام خانوادگی</span> <input formControlName="lastName" /></label>
+      <label><span class="field-label required">کد ملی</span> <input formControlName="nationalId" maxlength="10" /></label>
+      <label><span class="field-label required">تلفن</span> <input formControlName="phone" /></label>
+      <label><span class="field-label required">تاریخ تولد</span> <app-shamsi-date formControlName="dateOfBirth" /></label>
       <label>
-        جنسیت
+        <span class="field-label required">جنسیت</span>
         <span class="specialty-field">
           <app-gender-mark [gender]="form.controls.gender.value" />
           <select formControlName="gender">

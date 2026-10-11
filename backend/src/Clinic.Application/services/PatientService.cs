@@ -8,10 +8,11 @@ namespace Clinic.Application.Services;
 
 public sealed class PatientService(IPatientRepository patients, IAppointmentRepository appointments, IUnitOfWork unitOfWork) : IPatientService
 {
-    public async Task<IReadOnlyList<PatientDto>> GetAllAsync(string? search, CancellationToken cancellationToken)
+    public async Task<PagedResult<PatientDto>> GetAllAsync(string? search, int page, int pageSize, CancellationToken cancellationToken)
     {
-        var items = await patients.ListAsync(search, cancellationToken);
-        return items.Select(ToDto).ToList();
+        var (currentPage, size) = PageQuery.Normalize(page, pageSize);
+        var result = await patients.ListAsync(search, currentPage, size, cancellationToken);
+        return new PagedResult<PatientDto>(result.Items.Select(ToDto).ToList(), result.Page, result.PageSize, result.TotalCount);
     }
 
     public async Task<PatientDto> GetByIdAsync(Guid id, CancellationToken cancellationToken)

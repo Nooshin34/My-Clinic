@@ -1,4 +1,5 @@
 import { HttpErrorResponse } from '@angular/common/http';
+import { formatShamsiDate, formatShamsiDateTime, formatShamsiToday } from './jalali';
 
 export function genderLabel(value: string): string {
   switch (value) {
@@ -27,27 +28,15 @@ export function fullName(firstName: string, lastName: string): string {
 }
 
 export function todayShamsi(date = new Date()): string {
-  const parts = new Intl.DateTimeFormat('fa-IR-u-ca-persian', {
-    weekday: 'long',
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
-  }).formatToParts(date);
-  const value = (type: Intl.DateTimeFormatPartTypes) => parts.find((part) => part.type === type)?.value ?? '';
-  return `${value('weekday')} ${value('day')} ${value('month')} ${value('year')}`;
+  return formatShamsiToday(date);
 }
 
 export function formatWhen(value: string): string {
-  return new Intl.DateTimeFormat('fa-IR', {
-    dateStyle: 'medium',
-    timeStyle: 'short',
-  }).format(new Date(value));
+  return formatShamsiDateTime(value);
 }
 
-export function toLocalInput(value: string): string {
-  const date = new Date(value);
-  const pad = (part: number) => String(part).padStart(2, '0');
-  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+export function formatBirthDate(value: string): string {
+  return formatShamsiDate(value);
 }
 
 export function readApiError(error: unknown): string {

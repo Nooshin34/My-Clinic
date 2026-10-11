@@ -1,5 +1,6 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
+import { firstValueFrom, Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
 import {
   Appointment,
@@ -7,9 +8,13 @@ import {
   Dashboard,
   Doctor,
   DoctorInput,
+  Page,
   Patient,
   PatientInput,
+  Specialty,
 } from './models';
+
+export const listPageSize = 10;
 
 @Injectable({ providedIn: 'root' })
 export class ClinicApi {
@@ -20,8 +25,12 @@ export class ClinicApi {
     return this.http.get<Dashboard>(`${this.base}/dashboard`);
   }
 
-  patients(search?: string) {
-    return this.http.get<Patient[]>(`${this.base}/patients`, { params: searchParams(search) });
+  patients(search?: string, page = 1, pageSize = listPageSize) {
+    return this.http.get<Page<Patient>>(`${this.base}/patients`, { params: pageParams(search, page, pageSize) });
+  }
+
+  patientOptions() {
+    return this.everyPage((page) => this.patients(undefined, page, 100));
   }
 
   createPatient(body: PatientInput) {
@@ -36,8 +45,12 @@ export class ClinicApi {
     return this.http.delete<void>(`${this.base}/patients/${id}`);
   }
 
-  doctors(search?: string) {
-    return this.http.get<Doctor[]>(`${this.base}/doctors`, { params: searchParams(search) });
+  doctors(search?: string, page = 1, pageSize = listPageSize) {
+    return this.http.get<Page<Doctor>>(`${this.base}/doctors`, { params: pageParams(search, page, pageSize) });
+  }
+
+  doctorOptions() {
+    return this.everyPage((page) => this.doctors(undefined, page, 100));
   }
 
   createDoctor(body: DoctorInput) {
@@ -52,8 +65,16 @@ export class ClinicApi {
     return this.http.delete<void>(`${this.base}/doctors/${id}`);
   }
 
-  appointments(search?: string) {
-    return this.http.get<Appointment[]>(`${this.base}/appointments`, { params: searchParams(search) });
+  specialties() {
+    return this.http.get<Specialty[]>(`${this.base}/specialties`);
+  }
+
+  createSpecialty(name: string) {
+    return this.http.post<Specialty>(`${this.base}/specialties`, { name });
+  }
+
+  appointments(search?: string, page = 1, pageSize = listPageSize) {
+    return this.http.get<Page<Appointment>>(`${this.base}/appointments`, { params: pageParams(search, page, pageSize) });
   }
 
   createAppointment(body: AppointmentInput) {
@@ -67,9 +88,22 @@ export class ClinicApi {
   deleteAppointment(id: string) {
     return this.http.delete<void>(`${this.base}/appointments/${id}`);
   }
+
+  private async everyPage<T>(load: (page: number) => Observable<Page<T>>): Promise<T[]> {
+    const first = await firstValueFrom(load(1));
+    if (first.totalPages <= 1) return first.items;
+
+    const rest = await Promise.all(
+      Array.from({ length: first.totalPages - 1 }, (_, index) => firstValueFrom(load(index + 2))),
+    );
+    return first.items.concat(...rest.map((page) => page.items));
+  }
 }
 
-function searchParams(search?: string): HttpParams {
+function pageParams(search: string | undefined, page: number, pageSize: number): HttpParams {
+  let params = new HttpParams().set('page', page).set('pageSize', pageSize);
   const term = search?.trim();
-  return term ? new HttpParams().set('search', term) : new HttpParams();
+  if (term) params = params.set('search', term);
+  return params;
 }
+

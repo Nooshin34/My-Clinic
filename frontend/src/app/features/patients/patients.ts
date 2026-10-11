@@ -2,13 +2,15 @@ import { Component, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { firstValueFrom } from 'rxjs';
 import { ClinicApi } from '../../core/clinic-api';
-import { fullName, genderLabel, readApiError } from '../../core/labels';
+import { formatBirthDate, fullName, readApiError } from '../../core/labels';
 import { Patient } from '../../core/models';
 import { GenderMark } from '../../shared/gender-mark/gender-mark';
+import { Pager } from '../../shared/pager/pager';
+import { ShamsiDate } from '../../shared/shamsi-date/shamsi-date';
 
 @Component({
   selector: 'app-patients',
-  imports: [ReactiveFormsModule, GenderMark],
+  imports: [ReactiveFormsModule, GenderMark, ShamsiDate, Pager],
   templateUrl: './patients.html',
 })
 export class Patients {
@@ -20,10 +22,12 @@ export class Patients {
   protected readonly saving = signal(false);
   protected readonly error = signal<string | null>(null);
   protected readonly search = signal('');
+  protected readonly page = signal(1);
+  protected readonly totalPages = signal(0);
   protected readonly editorOpen = signal(false);
   protected readonly editingId = signal<string | null>(null);
   protected readonly name = fullName;
-  protected readonly gender = genderLabel;
+  protected readonly birthDate = formatBirthDate;
   protected readonly form = this.formBuilder.nonNullable.group({
     firstName: ['', Validators.required],
     lastName: ['', Validators.required],
@@ -66,11 +70,24 @@ export class Patients {
     this.editorOpen.set(false);
   }
 
+  protected searchList(): void {
+    this.page.set(1);
+    void this.load();
+  }
+
+  protected goTo(page: number): void {
+    this.page.set(page);
+    void this.load();
+  }
+
   protected async load(): Promise<void> {
     this.loading.set(true);
     this.error.set(null);
     try {
-      this.patients.set(await firstValueFrom(this.api.patients(this.search())));
+      const result = await firstValueFrom(this.api.patients(this.search(), this.page()));
+      this.patients.set(result.items);
+      this.page.set(result.page);
+      this.totalPages.set(result.totalPages);
     } catch (error) {
       this.error.set(readApiError(error));
     } finally {

@@ -1,3 +1,5 @@
+using Clinic.Application.Common;
+using Clinic.Application.Dtos;
 using Clinic.Application.Interfaces;
 using Clinic.Domain.Entities;
 using Clinic.Domain.Enums;
@@ -7,11 +9,12 @@ namespace Clinic.Infrastructure.Persistence.Repositories;
 
 public sealed class PatientRepository(ClinicDbContext db) : IPatientRepository
 {
-    public async Task<IReadOnlyList<Patient>> ListAsync(string? search, CancellationToken cancellationToken)
+    public Task<PagedResult<Patient>> ListAsync(string? search, int page, int pageSize, CancellationToken cancellationToken)
     {
-        var query = db.Patients.AsNoTracking().AsQueryable();
-        query = ApplySearch(query, search);
-        return await query.OrderBy(patient => patient.LastName).ThenBy(patient => patient.FirstName).ToListAsync(cancellationToken);
+        var query = ApplySearch(db.Patients.AsNoTracking(), search)
+            .OrderBy(patient => patient.LastName)
+            .ThenBy(patient => patient.FirstName);
+        return QueryPages.ReadAsync(query, page, pageSize, cancellationToken);
     }
 
     public Task<Patient?> GetByIdAsync(Guid id, CancellationToken cancellationToken) =>
@@ -44,25 +47,29 @@ public sealed class PatientRepository(ClinicDbContext db) : IPatientRepository
 
 public sealed class DoctorRepository(ClinicDbContext db) : IDoctorRepository
 {
-    public async Task<IReadOnlyList<Doctor>> ListAsync(string? search, CancellationToken cancellationToken)
+    public Task<PagedResult<Doctor>> ListAsync(string? search, int page, int pageSize, CancellationToken cancellationToken)
     {
-        var query = db.Doctors.AsNoTracking().AsQueryable();
+        var query = db.Doctors.AsNoTracking().Include(doctor => doctor.Specialty).AsQueryable();
         if (!string.IsNullOrWhiteSpace(search))
         {
             var pattern = $"%{search.Trim()}%";
             query = query.Where(doctor =>
                 EF.Functions.ILike(doctor.FirstName, pattern) ||
                 EF.Functions.ILike(doctor.LastName, pattern) ||
-                EF.Functions.ILike(doctor.Specialty, pattern) ||
+                EF.Functions.ILike(doctor.Specialty.Name, pattern) ||
                 EF.Functions.ILike(doctor.LicenseNumber, pattern) ||
                 EF.Functions.ILike(doctor.Phone, pattern));
         }
 
-        return await query.OrderBy(doctor => doctor.LastName).ThenBy(doctor => doctor.FirstName).ToListAsync(cancellationToken);
+        return QueryPages.ReadAsync(
+            query.OrderBy(doctor => doctor.LastName).ThenBy(doctor => doctor.FirstName),
+            page,
+            pageSize,
+            cancellationToken);
     }
 
     public Task<Doctor?> GetByIdAsync(Guid id, CancellationToken cancellationToken) =>
-        db.Doctors.FirstOrDefaultAsync(doctor => doctor.Id == id, cancellationToken);
+        db.Doctors.Include(doctor => doctor.Specialty).FirstOrDefaultAsync(doctor => doctor.Id == id, cancellationToken);
 
     public Task<int> CountAsync(CancellationToken cancellationToken) =>
         db.Doctors.CountAsync(cancellationToken);
@@ -81,7 +88,7 @@ public sealed class DoctorRepository(ClinicDbContext db) : IDoctorRepository
 
 public sealed class AppointmentRepository(ClinicDbContext db) : IAppointmentRepository
 {
-    public async Task<IReadOnlyList<Appointment>> ListAsync(string? search, CancellationToken cancellationToken)
+    public Task<PagedResult<Appointment>> ListAsync(string? search, int page, int pageSize, CancellationToken cancellationToken)
     {
         var query = DetailedQuery();
         if (!string.IsNullOrWhiteSpace(search))
@@ -93,10 +100,10 @@ public sealed class AppointmentRepository(ClinicDbContext db) : IAppointmentRepo
                 EF.Functions.ILike(appointment.Patient.LastName, pattern) ||
                 EF.Functions.ILike(appointment.Doctor.FirstName, pattern) ||
                 EF.Functions.ILike(appointment.Doctor.LastName, pattern) ||
-                EF.Functions.ILike(appointment.Doctor.Specialty, pattern));
+                EF.Functions.ILike(appointment.Doctor.Specialty.Name, pattern));
         }
 
-        return await query.OrderBy(appointment => appointment.ScheduledAtUtc).ToListAsync(cancellationToken);
+        return QueryPages.ReadAsync(query.OrderBy(appointment => appointment.ScheduledAtUtc), page, pageSize, cancellationToken);
     }
 
     public async Task<IReadOnlyList<Appointment>> ListBetweenAsync(DateTime fromUtc, DateTime toUtc, CancellationToken cancellationToken) =>
@@ -109,6 +116,7 @@ public sealed class AppointmentRepository(ClinicDbContext db) : IAppointmentRepo
         db.Appointments
             .Include(appointment => appointment.Patient)
             .Include(appointment => appointment.Doctor)
+            .ThenInclude(doctor => doctor.Specialty)
             .FirstOrDefaultAsync(appointment => appointment.Id == id, cancellationToken);
 
     public Task<int> CountByStatusAsync(AppointmentStatus status, CancellationToken cancellationToken) =>
@@ -133,5 +141,43 @@ public sealed class AppointmentRepository(ClinicDbContext db) : IAppointmentRepo
     public void Remove(Appointment appointment) => db.Appointments.Remove(appointment);
 
     private IQueryable<Appointment> DetailedQuery() =>
-        db.Appointments.AsNoTracking().Include(appointment => appointment.Patient).Include(appointment => appointment.Doctor);
+        db.Appointments.AsNoTracking()
+            .Include(appointment => appointment.Patient)
+            .Include(appointment => appointment.Doctor)
+            .ThenInclude(doctor => doctor.Specialty);
+}
+
+public sealed class SpecialtyRepository(ClinicDbContext db) : ISpecialtyRepository
+{
+    public async Task<IReadOnlyList<Specialty>> ListAsync(CancellationToken cancellationToken) =>
+        await db.Specialties.AsNoTracking().OrderBy(specialty => specialty.Name).ToListAsync(cancellationToken);
+
+    public Task<Specialty?> GetByIdAsync(Guid id, CancellationToken cancellationToken) =>
+        db.Specialties.FirstOrDefaultAsync(specialty => specialty.Id == id, cancellationToken);
+
+    public Task<Specialty?> FindByNameAsync(string name, CancellationToken cancellationToken) =>
+        db.Specialties.FirstOrDefaultAsync(specialty => EF.Functions.ILike(specialty.Name, name), cancellationToken);
+
+    public Task AddAsync(Specialty specialty, CancellationToken cancellationToken) =>
+        db.Specialties.AddAsync(specialty, cancellationToken).AsTask();
+}
+
+file static class QueryPages
+{
+    public static async Task<PagedResult<T>> ReadAsync<T>(
+        IOrderedQueryable<T> query,
+        int page,
+        int pageSize,
+        CancellationToken cancellationToken)
+    {
+        var (current, size) = PageQuery.Normalize(page, pageSize);
+        var total = await query.CountAsync(cancellationToken);
+        var pages = size <= 0 ? 0 : (int)Math.Ceiling(total / (double)size);
+        var resolved = pages == 0 ? 1 : Math.Min(current, pages);
+        var items = total == 0
+            ? new List<T>()
+            : await query.Skip((resolved - 1) * size).Take(size).ToListAsync(cancellationToken);
+
+        return new PagedResult<T>(items, resolved, size, total);
+    }
 }

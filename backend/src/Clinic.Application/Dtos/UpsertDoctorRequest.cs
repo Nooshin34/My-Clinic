@@ -3,7 +3,7 @@ namespace Clinic.Application.Dtos;
 public sealed record UpsertDoctorRequest(
     string FirstName,
     string LastName,
-    string Specialty,
+    Guid SpecialtyId,
     string Phone,
     string Email,
     string LicenseNumber);

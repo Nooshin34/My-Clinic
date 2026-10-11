@@ -3,7 +3,6 @@
     <p class="eyebrow">امروز، {{ today }}</p>
     <h1>داشبورد پذیرش</h1>
   </div>
-  <a class="button" routerLink="/appointments">نوبت تازه</a>
 </header>
 
 @if (error()) {
@@ -56,7 +55,7 @@
             <td>
               <span class="specialty">
                 <app-specialty-mark [specialty]="item.doctorSpecialty" />
-                {{ item.doctorName }} · {{ item.doctorSpecialty }}
+                {{ item.doctorName }} · {{ specialtyName(item.doctorSpecialty) }}
               </span>
             </td>
             <td>{{ item.reason }}</td>

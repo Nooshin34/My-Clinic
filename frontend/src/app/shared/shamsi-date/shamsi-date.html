@@ -1,0 +1,32 @@
+<div class="shamsi-fields" [class.with-time]="withTime()">
+  <select aria-label="روز" [disabled]="disabled()" [value]="day() ?? ''" (change)="onDay($event)">
+    <option value="">روز</option>
+    @for (day of days(); track day) {
+      <option [value]="day">{{ digits(day) }}</option>
+    }
+  </select>
+  <select aria-label="ماه" [disabled]="disabled()" [value]="month() ?? ''" (change)="onMonth($event)">
+    <option value="">ماه</option>
+    @for (name of months; track name; let index = $index) {
+      <option [value]="index + 1">{{ name }}</option>
+    }
+  </select>
+  <select aria-label="سال" [disabled]="disabled()" [value]="year() ?? ''" (change)="onYear($event)">
+    <option value="">سال</option>
+    @for (year of years(); track year) {
+      <option [value]="year">{{ digits(year) }}</option>
+    }
+  </select>
+  @if (withTime()) {
+    <select aria-label="ساعت" [disabled]="disabled()" [value]="hour()" (change)="onHour($event)">
+      @for (hour of hours(); track hour) {
+        <option [value]="hour">{{ clock(hour) }}</option>
+      }
+    </select>
+    <select aria-label="دقیقه" [disabled]="disabled()" [value]="minute()" (change)="onMinute($event)">
+      @for (minute of minutes(); track minute) {
+        <option [value]="minute">{{ clock(minute) }}</option>
+      }
+    </select>
+  }
+</div>

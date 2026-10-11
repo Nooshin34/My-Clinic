@@ -19,10 +19,16 @@ export interface PatientInput {
   address: string | null;
 }
 
+export interface Specialty {
+  id: string;
+  name: string;
+}
+
 export interface Doctor {
   id: string;
   firstName: string;
   lastName: string;
+  specialtyId: string;
   specialty: string;
   phone: string;
   email: string;
@@ -32,7 +38,7 @@ export interface Doctor {
 export interface DoctorInput {
   firstName: string;
   lastName: string;
-  specialty: string;
+  specialtyId: string;
   phone: string;
   email: string;
   licenseNumber: string;
@@ -58,6 +64,14 @@ export interface AppointmentInput {
   reason: string;
   status: string;
   notes: string | null;
+}
+
+export interface Page<T> {
+  items: T[];
+  page: number;
+  pageSize: number;
+  totalCount: number;
+  totalPages: number;
 }
 
 export interface Dashboard {

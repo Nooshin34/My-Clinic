@@ -1,14 +1,14 @@
 import { Component, inject, signal } from '@angular/core';
-import { RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { ClinicApi } from '../../core/clinic-api';
 import { formatWhen, readApiError, statusLabel, todayShamsi } from '../../core/labels';
 import { Dashboard as DashboardData } from '../../core/models';
+import { specialtyLabel } from '../../core/specialty-visual';
 import { SpecialtyMark } from '../../shared/specialty-mark/specialty-mark';
 
 @Component({
   selector: 'app-dashboard',
-  imports: [RouterLink, SpecialtyMark],
+  imports: [SpecialtyMark],
   templateUrl: './dashboard.html',
 })
 export class Dashboard {
@@ -19,6 +19,7 @@ export class Dashboard {
   protected readonly when = formatWhen;
   protected readonly status = statusLabel;
   protected readonly today = todayShamsi();
+  protected readonly specialtyName = specialtyLabel;
 
   constructor() {
     void this.load();

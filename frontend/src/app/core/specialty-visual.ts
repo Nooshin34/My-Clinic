@@ -51,31 +51,42 @@ const visuals: Record<SpecialtyKind, SpecialtyVisual> = {
   general: { kind: 'general', color: '#3d5a80', soft: '#e8eef6' },
 };
 
-const rules: { kind: SpecialtyKind; words: string[] }[] = [
-  { kind: 'heart', words: ['قلب', 'عروق', 'کاردیو', 'cardio', 'heart'] },
-  { kind: 'child', words: ['کودک', 'اطفال', 'نوزاد', 'pediatric'] },
-  { kind: 'bone', words: ['ارتوپد', 'استخوان', 'ortho'] },
-  { kind: 'skin', words: ['پوست', 'درمات', 'dermat'] },
-  { kind: 'eye', words: ['چشم', 'ophthal'] },
-  { kind: 'ear', words: ['گوش', 'حلق', 'بینی', 'ent'] },
-  { kind: 'women', words: ['زنان', 'زایمان', 'مامایی', 'obgyn'] },
-  { kind: 'brain', words: ['مغز', 'اعصاب', 'نورول', 'neuro'] },
-  { kind: 'tooth', words: ['دندان', 'dental'] },
-  { kind: 'emergency', words: ['اورژانس', 'emergency'] },
-  { kind: 'mind', words: ['روان', 'psych'] },
-  { kind: 'lung', words: ['ریه', 'pulmon'] },
-  { kind: 'stomach', words: ['گوارش', 'gastro'] },
-  { kind: 'kidney', words: ['کلیه', 'اورول', 'urolog', 'nephro'] },
-  { kind: 'gland', words: ['غدد', 'endocr'] },
-  { kind: 'shield', words: ['عفونی', 'infectious'] },
-  { kind: 'scan', words: ['رادیو', 'تصویربرداری', 'radiolog'] },
-  { kind: 'mask', words: ['بیهوش', 'anesth'] },
-  { kind: 'surgery', words: ['جراحی', 'surgery'] },
-  { kind: 'internal', words: ['داخلی', 'internal'] },
+const knownSpecialties: { label: string; kind: SpecialtyKind }[] = [
+  { label: 'پزشکی عمومی', kind: 'general' },
+  { label: 'قلب و عروق', kind: 'heart' },
+  { label: 'کودکان', kind: 'child' },
+  { label: 'ارتوپدی', kind: 'bone' },
+  { label: 'پوست', kind: 'skin' },
+  { label: 'چشم', kind: 'eye' },
+  { label: 'گوش و حلق و بینی', kind: 'ear' },
+  { label: 'زنان و زایمان', kind: 'women' },
+  { label: 'مغز و اعصاب', kind: 'brain' },
+  { label: 'دندان‌پزشکی', kind: 'tooth' },
+  { label: 'اورژانس', kind: 'emergency' },
+  { label: 'روان‌پزشکی', kind: 'mind' },
+  { label: 'ریه', kind: 'lung' },
+  { label: 'گوارش', kind: 'stomach' },
+  { label: 'کلیه و مجاری ادرار', kind: 'kidney' },
+  { label: 'غدد', kind: 'gland' },
+  { label: 'عفونی', kind: 'shield' },
+  { label: 'رادیولوژی', kind: 'scan' },
+  { label: 'بیهوشی', kind: 'mask' },
+  { label: 'جراحی', kind: 'surgery' },
+  { label: 'داخلی', kind: 'internal' },
 ];
 
+export function specialtyLabel(value: string): string {
+  return value;
+}
+
 export function specialtyVisual(value: string): SpecialtyVisual {
-  const text = value.trim().toLowerCase().replace(/\u200c/g, '');
-  const match = rules.find((rule) => rule.words.some((word) => text.includes(word)));
-  return match ? visuals[match.kind] : visuals.general;
+  const text = value.replace(/\u200c/g, '');
+  const exact = knownSpecialties.find((item) => item.label.replace(/\u200c/g, '') === text);
+  if (exact) return visuals[exact.kind];
+
+  const match = knownSpecialties
+    .filter((item) => item.kind !== 'general')
+    .sort((left, right) => right.label.length - left.label.length)
+    .find((item) => text.includes(item.label.replace(/\u200c/g, '')));
+  return visuals[match?.kind ?? 'general'];
 }

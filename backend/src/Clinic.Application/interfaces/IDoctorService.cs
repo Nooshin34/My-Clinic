@@ -4,7 +4,7 @@ namespace Clinic.Application.Interfaces;
 
 public interface IDoctorService
 {
-    Task<IReadOnlyList<DoctorDto>> GetAllAsync(string? search, CancellationToken cancellationToken);
+    Task<PagedResult<DoctorDto>> GetAllAsync(string? search, int page, int pageSize, CancellationToken cancellationToken);
 
     Task<DoctorDto> GetByIdAsync(Guid id, CancellationToken cancellationToken);
 

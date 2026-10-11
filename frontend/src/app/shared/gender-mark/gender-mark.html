@@ -1,4 +1,10 @@
-<span class="gender-mark" [attr.data-kind]="kind()" [attr.title]="kind() === 'female' ? 'زن' : kind() === 'male' ? 'مرد' : 'نامشخص'" aria-hidden="true">
+<span
+  class="gender-mark"
+  [attr.data-kind]="kind()"
+  [attr.title]="label()"
+  [attr.aria-hidden]="labelled() ? null : true"
+  [attr.aria-label]="labelled() ? label() : null"
+>
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
     @switch (kind()) {
       @case ('female') {

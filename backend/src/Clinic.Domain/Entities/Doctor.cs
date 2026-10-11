@@ -8,7 +8,9 @@ public class Doctor : Entity
 
     public string LastName { get; set; } = string.Empty;
 
-    public string Specialty { get; set; } = string.Empty;
+    public Guid SpecialtyId { get; set; }
+
+    public Specialty Specialty { get; set; } = null!;
 
     public string Phone { get; set; } = string.Empty;
 

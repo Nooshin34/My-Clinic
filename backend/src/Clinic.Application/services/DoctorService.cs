@@ -6,14 +6,19 @@ using Clinic.Domain.Entities;
 
 namespace Clinic.Application.Services;
 
-public sealed class DoctorService(IDoctorRepository doctors, IAppointmentRepository appointments, IUnitOfWork unitOfWork) : IDoctorService
+public sealed class DoctorService(
+    IDoctorRepository doctors,
+    ISpecialtyRepository specialties,
+    IAppointmentRepository appointments,
+    IUnitOfWork unitOfWork) : IDoctorService
 {
     private static readonly Regex EmailPattern = new(@"^[^@\s]+@[^@\s]+\.[^@\s]+$", RegexOptions.CultureInvariant | RegexOptions.Compiled);
 
-    public async Task<IReadOnlyList<DoctorDto>> GetAllAsync(string? search, CancellationToken cancellationToken)
+    public async Task<PagedResult<DoctorDto>> GetAllAsync(string? search, int page, int pageSize, CancellationToken cancellationToken)
     {
-        var items = await doctors.ListAsync(search, cancellationToken);
-        return items.Select(ToDto).ToList();
+        var (currentPage, size) = PageQuery.Normalize(page, pageSize);
+        var result = await doctors.ListAsync(search, currentPage, size, cancellationToken);
+        return new PagedResult<DoctorDto>(result.Items.Select(ToDto).ToList(), result.Page, result.PageSize, result.TotalCount);
     }
 
     public async Task<DoctorDto> GetByIdAsync(Guid id, CancellationToken cancellationToken)
@@ -26,9 +31,9 @@ public sealed class DoctorService(IDoctorRepository doctors, IAppointmentReposit
 
     public async Task<DoctorDto> CreateAsync(UpsertDoctorRequest request, CancellationToken cancellationToken)
     {
-        await ValidateAsync(request, null, cancellationToken);
+        var specialty = await ValidateAsync(request, null, cancellationToken);
         var doctor = new Doctor();
-        Apply(doctor, request);
+        Apply(doctor, specialty, request);
         await doctors.AddAsync(doctor, cancellationToken);
         await unitOfWork.SaveChangesAsync(cancellationToken);
         return ToDto(doctor);
@@ -39,8 +44,8 @@ public sealed class DoctorService(IDoctorRepository doctors, IAppointmentReposit
         var doctor = await doctors.GetByIdAsync(id, cancellationToken)
             ?? throw new NotFoundException("پزشک پیدا نشد.");
 
-        await ValidateAsync(request, id, cancellationToken);
-        Apply(doctor, request);
+        var specialty = await ValidateAsync(request, id, cancellationToken);
+        Apply(doctor, specialty, request);
         await unitOfWork.SaveChangesAsync(cancellationToken);
         return ToDto(doctor);
     }
@@ -57,12 +62,19 @@ public sealed class DoctorService(IDoctorRepository doctors, IAppointmentReposit
         await unitOfWork.SaveChangesAsync(cancellationToken);
     }
 
-    private async Task ValidateAsync(UpsertDoctorRequest request, Guid? ignoreId, CancellationToken cancellationToken)
+    private async Task<Specialty> ValidateAsync(UpsertDoctorRequest request, Guid? ignoreId, CancellationToken cancellationToken)
     {
         var errors = new List<string>();
         Require(errors, request.FirstName, "نام را وارد کنید.", 80, "نام طولانی است.");
         Require(errors, request.LastName, "نام خانوادگی را وارد کنید.", 80, "نام خانوادگی طولانی است.");
-        Require(errors, request.Specialty, "تخصص را وارد کنید.", 80, "تخصص طولانی است.");
+        Specialty? specialty = null;
+        if (request.SpecialtyId == Guid.Empty)
+            errors.Add("تخصص را انتخاب کنید.");
+        else
+            specialty = await specialties.GetByIdAsync(request.SpecialtyId, cancellationToken);
+
+        if (specialty is null && request.SpecialtyId != Guid.Empty)
+            errors.Add("تخصص انتخاب‌شده وجود ندارد.");
         Require(errors, request.LicenseNumber, "شماره نظام پزشکی را وارد کنید.", 32, "شماره نظام پزشکی طولانی است.");
 
         var phone = request.Phone?.Trim() ?? string.Empty;
@@ -86,13 +98,16 @@ public sealed class DoctorService(IDoctorRepository doctors, IAppointmentReposit
 
         if (errors.Count > 0)
             throw new AppValidationException(errors);
+
+        return specialty!;
     }
 
-    private static void Apply(Doctor doctor, UpsertDoctorRequest request)
+    private static void Apply(Doctor doctor, Specialty specialty, UpsertDoctorRequest request)
     {
         doctor.FirstName = request.FirstName.Trim();
         doctor.LastName = request.LastName.Trim();
-        doctor.Specialty = request.Specialty.Trim();
+        doctor.SpecialtyId = specialty.Id;
+        doctor.Specialty = specialty;
         doctor.Phone = request.Phone.Trim();
         doctor.Email = request.Email.Trim();
         doctor.LicenseNumber = request.LicenseNumber.Trim();
@@ -110,7 +125,8 @@ public sealed class DoctorService(IDoctorRepository doctors, IAppointmentReposit
         doctor.Id,
         doctor.FirstName,
         doctor.LastName,
-        doctor.Specialty,
+        doctor.SpecialtyId,
+        doctor.Specialty.Name,
         doctor.Phone,
         doctor.Email,
         doctor.LicenseNumber);

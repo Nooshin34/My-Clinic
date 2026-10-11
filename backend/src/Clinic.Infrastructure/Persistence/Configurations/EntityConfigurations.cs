@@ -28,12 +28,60 @@ public class DoctorConfiguration : IEntityTypeConfiguration<Doctor>
         builder.HasKey(doctor => doctor.Id);
         builder.Property(doctor => doctor.FirstName).HasMaxLength(80).IsRequired();
         builder.Property(doctor => doctor.LastName).HasMaxLength(80).IsRequired();
-        builder.Property(doctor => doctor.Specialty).HasMaxLength(80).IsRequired();
         builder.Property(doctor => doctor.Phone).HasMaxLength(20).IsRequired();
         builder.Property(doctor => doctor.Email).HasMaxLength(120).IsRequired();
         builder.HasIndex(doctor => doctor.Email).IsUnique();
         builder.Property(doctor => doctor.LicenseNumber).HasMaxLength(32).IsRequired();
         builder.HasIndex(doctor => doctor.LicenseNumber).IsUnique();
+
+        builder.HasOne(doctor => doctor.Specialty)
+            .WithMany(specialty => specialty.Doctors)
+            .HasForeignKey(doctor => doctor.SpecialtyId)
+            .OnDelete(DeleteBehavior.Restrict);
+    }
+}
+
+public class SpecialtyConfiguration : IEntityTypeConfiguration<Specialty>
+{
+    public static readonly DateTime SeededAtUtc = new(2026, 10, 11, 0, 0, 0, DateTimeKind.Utc);
+
+    public static readonly (Guid Id, string Name)[] Seeds =
+    [
+        (Guid.Parse("8f0a6c10-0001-4000-8000-000000000001"), "پزشکی عمومی"),
+        (Guid.Parse("8f0a6c10-0001-4000-8000-000000000002"), "قلب و عروق"),
+        (Guid.Parse("8f0a6c10-0001-4000-8000-000000000003"), "کودکان"),
+        (Guid.Parse("8f0a6c10-0001-4000-8000-000000000004"), "ارتوپدی"),
+        (Guid.Parse("8f0a6c10-0001-4000-8000-000000000005"), "پوست"),
+        (Guid.Parse("8f0a6c10-0001-4000-8000-000000000006"), "چشم"),
+        (Guid.Parse("8f0a6c10-0001-4000-8000-000000000007"), "گوش و حلق و بینی"),
+        (Guid.Parse("8f0a6c10-0001-4000-8000-000000000008"), "زنان و زایمان"),
+        (Guid.Parse("8f0a6c10-0001-4000-8000-000000000009"), "مغز و اعصاب"),
+        (Guid.Parse("8f0a6c10-0001-4000-8000-00000000000a"), "دندان‌پزشکی"),
+        (Guid.Parse("8f0a6c10-0001-4000-8000-00000000000b"), "اورژانس"),
+        (Guid.Parse("8f0a6c10-0001-4000-8000-00000000000c"), "روان‌پزشکی"),
+        (Guid.Parse("8f0a6c10-0001-4000-8000-00000000000d"), "ریه"),
+        (Guid.Parse("8f0a6c10-0001-4000-8000-00000000000e"), "گوارش"),
+        (Guid.Parse("8f0a6c10-0001-4000-8000-00000000000f"), "کلیه و مجاری ادرار"),
+        (Guid.Parse("8f0a6c10-0001-4000-8000-000000000010"), "غدد"),
+        (Guid.Parse("8f0a6c10-0001-4000-8000-000000000011"), "عفونی"),
+        (Guid.Parse("8f0a6c10-0001-4000-8000-000000000012"), "رادیولوژی"),
+        (Guid.Parse("8f0a6c10-0001-4000-8000-000000000013"), "بیهوشی"),
+        (Guid.Parse("8f0a6c10-0001-4000-8000-000000000014"), "جراحی"),
+        (Guid.Parse("8f0a6c10-0001-4000-8000-000000000015"), "داخلی")
+    ];
+
+    public void Configure(EntityTypeBuilder<Specialty> builder)
+    {
+        builder.ToTable("specialties");
+        builder.HasKey(specialty => specialty.Id);
+        builder.Property(specialty => specialty.Name).HasMaxLength(80).IsRequired();
+        builder.HasIndex(specialty => specialty.Name).IsUnique();
+        builder.HasData(Seeds.Select(item => new Specialty
+        {
+            Id = item.Id,
+            Name = item.Name,
+            CreatedAtUtc = SeededAtUtc
+        }));
     }
 }
 

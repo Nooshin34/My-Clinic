@@ -1,10 +1,11 @@
+using Clinic.Application.Dtos;
 using Clinic.Domain.Entities;
 
 namespace Clinic.Application.Interfaces;
 
 public interface IDoctorRepository
 {
-    Task<IReadOnlyList<Doctor>> ListAsync(string? search, CancellationToken cancellationToken);
+    Task<PagedResult<Doctor>> ListAsync(string? search, int page, int pageSize, CancellationToken cancellationToken);
 
     Task<Doctor?> GetByIdAsync(Guid id, CancellationToken cancellationToken);
 

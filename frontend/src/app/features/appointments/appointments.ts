@@ -2,13 +2,16 @@ import { Component, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { firstValueFrom } from 'rxjs';
 import { ClinicApi } from '../../core/clinic-api';
-import { formatWhen, fullName, readApiError, statusLabel, toLocalInput } from '../../core/labels';
+import { formatWhen, fullName, readApiError, statusLabel } from '../../core/labels';
 import { Appointment, Doctor, Patient } from '../../core/models';
+import { specialtyLabel } from '../../core/specialty-visual';
+import { Pager } from '../../shared/pager/pager';
+import { ShamsiDate } from '../../shared/shamsi-date/shamsi-date';
 import { SpecialtyMark } from '../../shared/specialty-mark/specialty-mark';
 
 @Component({
   selector: 'app-appointments',
-  imports: [ReactiveFormsModule, SpecialtyMark],
+  imports: [ReactiveFormsModule, SpecialtyMark, ShamsiDate, Pager],
   templateUrl: './appointments.html',
 })
 export class Appointments {
@@ -22,11 +25,14 @@ export class Appointments {
   protected readonly saving = signal(false);
   protected readonly error = signal<string | null>(null);
   protected readonly search = signal('');
+  protected readonly page = signal(1);
+  protected readonly totalPages = signal(0);
   protected readonly editorOpen = signal(false);
   protected readonly editingId = signal<string | null>(null);
   protected readonly name = fullName;
   protected readonly when = formatWhen;
   protected readonly status = statusLabel;
+  protected readonly specialtyName = specialtyLabel;
   protected readonly form = this.formBuilder.nonNullable.group({
     patientId: ['', Validators.required],
     doctorId: ['', Validators.required],
@@ -60,7 +66,7 @@ export class Appointments {
     this.form.setValue({
       patientId: item.patientId,
       doctorId: item.doctorId,
-      scheduledAt: toLocalInput(item.scheduledAtUtc),
+      scheduledAt: item.scheduledAtUtc,
       reason: item.reason,
       status: item.status,
       notes: item.notes ?? '',
@@ -72,16 +78,28 @@ export class Appointments {
     this.editorOpen.set(false);
   }
 
+  protected searchList(): void {
+    this.page.set(1);
+    void this.load();
+  }
+
+  protected goTo(page: number): void {
+    this.page.set(page);
+    void this.load();
+  }
+
   protected async load(): Promise<void> {
     this.loading.set(true);
     this.error.set(null);
     try {
       const [appointments, patients, doctors] = await Promise.all([
-        firstValueFrom(this.api.appointments(this.search())),
-        firstValueFrom(this.api.patients()),
-        firstValueFrom(this.api.doctors()),
+        firstValueFrom(this.api.appointments(this.search(), this.page())),
+        this.api.patientOptions(),
+        this.api.doctorOptions(),
       ]);
-      this.appointments.set(appointments);
+      this.appointments.set(appointments.items);
+      this.page.set(appointments.page);
+      this.totalPages.set(appointments.totalPages);
       this.patients.set(patients);
       this.doctors.set(doctors);
     } catch (error) {
@@ -103,7 +121,7 @@ export class Appointments {
     const body = {
       patientId: raw.patientId,
       doctorId: raw.doctorId,
-      scheduledAtUtc: new Date(raw.scheduledAt).toISOString(),
+      scheduledAtUtc: raw.scheduledAt,
       reason: raw.reason,
       status: raw.status,
       notes: raw.notes.trim() ? raw.notes.trim() : null,

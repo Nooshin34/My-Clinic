@@ -6,9 +6,16 @@
   <button class="button" type="button" (click)="openCreate()">پزشک جدید</button>
 </header>
 
-<form class="toolbar" (submit)="$event.preventDefault(); load()">
-  <input [value]="search()" (input)="onSearch($event)" placeholder="نام، تخصص یا شماره نظام" />
-  <button class="button secondary" type="submit">جستجو</button>
+<form class="toolbar" (submit)="$event.preventDefault(); searchList()">
+  <label class="search-field">
+    <input [value]="search()" (input)="onSearch($event)" placeholder="نام، تخصص یا شماره نظام" />
+    <button type="submit" aria-label="جستجو">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
+        <circle cx="11" cy="11" r="6.5" />
+        <path d="M16 16.5 20 20.5" />
+      </svg>
+    </button>
+  </label>
 </form>
 
 @if (error()) {
@@ -39,7 +46,7 @@
             <td>
               <span class="specialty">
                 <app-specialty-mark [specialty]="doctor.specialty" />
-                {{ doctor.specialty }}
+                {{ specialtyName(doctor.specialty) }}
               </span>
             </td>
             <td>{{ doctor.licenseNumber }}</td>
@@ -53,6 +60,7 @@
         }
       </tbody>
     </table>
+    <app-pager [page]="page()" [totalPages]="totalPages()" (pageChange)="goTo($event)" />
   }
 </section>
 
@@ -60,18 +68,40 @@
   <div class="backdrop" (click)="close()">
     <form class="dialog" [formGroup]="form" (click)="$event.stopPropagation()" (ngSubmit)="save()">
       <h2>{{ editingId() ? 'ویرایش پزشک' : 'پزشک جدید' }}</h2>
-      <label>نام <input formControlName="firstName" /></label>
-      <label>نام خانوادگی <input formControlName="lastName" /></label>
+      @if (error()) {
+        <p class="banner">{{ error() }}</p>
+      }
+      <label><span class="field-label required">نام</span> <input formControlName="firstName" /></label>
+      <label><span class="field-label required">نام خانوادگی</span> <input formControlName="lastName" /></label>
       <label>
-        تخصص
+        <span class="field-label required">تخصص</span>
         <span class="specialty-field">
-          <app-specialty-mark [specialty]="form.controls.specialty.value" />
-          <input formControlName="specialty" />
+          <app-specialty-mark [specialty]="selectedSpecialtyName()" />
+          <select formControlName="specialtyId">
+            <option value="">انتخاب کنید</option>
+            @for (item of specialtyOptions(); track item.id) {
+              <option [value]="item.id">{{ item.name }}</option>
+            }
+          </select>
+          <button type="button" class="specialty-add-button" aria-label="افزودن تخصص" (click)="toggleCustomSpecialty()">+</button>
         </span>
+        @if (addingSpecialty()) {
+          <span class="specialty-add">
+            <input
+              [value]="customSpecialty()"
+              (input)="onCustomSpecialty($event)"
+              (keydown.enter)="$event.preventDefault(); addSpecialty()"
+              placeholder="تخصص جدید"
+              maxlength="80"
+              autocomplete="off"
+            />
+            <button type="button" class="button" (click)="addSpecialty()">افزودن</button>
+          </span>
+        }
       </label>
-      <label>شماره نظام پزشکی <input formControlName="licenseNumber" /></label>
-      <label>تلفن <input formControlName="phone" /></label>
-      <label>ایمیل <input type="email" formControlName="email" /></label>
+      <label><span class="field-label required">شماره نظام پزشکی</span> <input formControlName="licenseNumber" /></label>
+      <label><span class="field-label required">تلفن</span> <input formControlName="phone" /></label>
+      <label><span class="field-label required">ایمیل</span> <input type="email" formControlName="email" /></label>
       <div class="dialog-actions">
         <button class="button secondary" type="button" (click)="close()">انصراف</button>
         <button class="button" type="submit" [disabled]="saving()">{{ saving() ? 'در حال ذخیره...' : 'ذخیره' }}</button>

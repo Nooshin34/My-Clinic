@@ -6,6 +6,7 @@ import { Component, computed, input } from '@angular/core';
 })
 export class GenderMark {
   readonly gender = input.required<string>();
+  readonly labelled = input(false);
   protected readonly kind = computed(() => {
     switch (this.gender()) {
       case 'Female':
@@ -14,6 +15,16 @@ export class GenderMark {
         return 'male';
       default:
         return 'unknown';
+    }
+  });
+  protected readonly label = computed(() => {
+    switch (this.kind()) {
+      case 'female':
+        return 'زن';
+      case 'male':
+        return 'مرد';
+      default:
+        return 'نامشخص';
     }
   });
 }

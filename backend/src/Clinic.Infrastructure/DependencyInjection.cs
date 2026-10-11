@@ -17,6 +17,7 @@ public static class DependencyInjection
         services.AddDbContext<ClinicDbContext>(options => options.UseNpgsql(connectionString));
         services.AddScoped<IPatientRepository, PatientRepository>();
         services.AddScoped<IDoctorRepository, DoctorRepository>();
+        services.AddScoped<ISpecialtyRepository, SpecialtyRepository>();
         services.AddScoped<IAppointmentRepository, AppointmentRepository>();
         services.AddScoped<IUnitOfWork, UnitOfWork>();
         return services;

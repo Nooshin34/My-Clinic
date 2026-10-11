@@ -12,10 +12,11 @@ public sealed class AppointmentService(
     IDoctorRepository doctors,
     IUnitOfWork unitOfWork) : IAppointmentService
 {
-    public async Task<IReadOnlyList<AppointmentDto>> GetAllAsync(string? search, CancellationToken cancellationToken)
+    public async Task<PagedResult<AppointmentDto>> GetAllAsync(string? search, int page, int pageSize, CancellationToken cancellationToken)
     {
-        var items = await appointments.ListAsync(search, cancellationToken);
-        return items.Select(AppointmentMapper.ToDto).ToList();
+        var (currentPage, size) = PageQuery.Normalize(page, pageSize);
+        var result = await appointments.ListAsync(search, currentPage, size, cancellationToken);
+        return new PagedResult<AppointmentDto>(result.Items.Select(AppointmentMapper.ToDto).ToList(), result.Page, result.PageSize, result.TotalCount);
     }
 
     public async Task<AppointmentDto> GetByIdAsync(Guid id, CancellationToken cancellationToken)
