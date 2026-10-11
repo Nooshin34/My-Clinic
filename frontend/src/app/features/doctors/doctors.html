@@ -1,7 +1,10 @@
 <header class="page-head">
-  <div>
-    <p class="eyebrow">کادر درمان</p>
-    <h1>پزشکان</h1>
+  <div class="page-title">
+    <div>
+      <p class="eyebrow">کادر درمان</p>
+      <h1>پزشکان</h1>
+    </div>
+    <app-clinic-art class="page-art" kind="syringe" />
   </div>
   <button class="button" type="button" (click)="openCreate()">پزشک جدید</button>
 </header>
@@ -26,7 +29,10 @@
   @if (loading()) {
     <app-list-loading />
   } @else if (!doctors().length) {
-    <p class="muted">پزشکی با این مشخصات پیدا نشد.</p>
+    <div class="empty-state">
+      <app-clinic-art kind="bandage" />
+      <p>پزشکی با این مشخصات پیدا نشد.</p>
+    </div>
   } @else {
     <table>
       <thead>
@@ -67,44 +73,58 @@
 @if (editorOpen()) {
   <div class="backdrop" (click)="close()">
     <form class="dialog" [formGroup]="form" (click)="$event.stopPropagation()" (ngSubmit)="save()">
-      <h2>{{ editingId() ? 'ویرایش پزشک' : 'پزشک جدید' }}</h2>
+      <div class="dialog-head">
+        <div class="dialog-title">
+          <app-clinic-art kind="syringe" />
+          <div>
+            <p class="eyebrow">کادر درمان</p>
+            <h2>{{ editingId() ? 'ویرایش پزشک' : 'پزشک جدید' }}</h2>
+          </div>
+        </div>
+        <button type="button" class="dialog-close" aria-label="بستن" (click)="close()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
+            <path d="M7 7 17 17M17 7 7 17" />
+          </svg>
+        </button>
+      </div>
       @if (error()) {
         <p class="banner">{{ error() }}</p>
       }
-      <label><span class="field-label required">نام</span> <input formControlName="firstName" /></label>
-      <label><span class="field-label required">نام خانوادگی</span> <input formControlName="lastName" /></label>
-      <label>
-        <span class="field-label required">تخصص</span>
-        <span class="specialty-field">
-          <app-specialty-mark [specialty]="selectedSpecialtyName()" />
-          <select formControlName="specialtyId">
-            <option value="">انتخاب کنید</option>
-            @for (item of specialtyOptions(); track item.id) {
-              <option [value]="item.id">{{ item.name }}</option>
-            }
-          </select>
-          <button type="button" class="specialty-add-button" aria-label="افزودن تخصص" (click)="toggleCustomSpecialty()">+</button>
-        </span>
-        @if (addingSpecialty()) {
-          <span class="specialty-add">
-            <input
-              [value]="customSpecialty()"
-              (input)="onCustomSpecialty($event)"
-              (keydown.enter)="$event.preventDefault(); addSpecialty()"
-              placeholder="تخصص جدید"
-              maxlength="80"
-              autocomplete="off"
-            />
-            <button type="button" class="button" (click)="addSpecialty()">افزودن</button>
+      <div class="dialog-grid">
+        <label><span class="field-label required">نام</span> <input formControlName="firstName" /></label>
+        <label><span class="field-label required">نام خانوادگی</span> <input formControlName="lastName" /></label>
+        <label class="wide">
+          <span class="field-label required">تخصص</span>
+          <span class="specialty-field">
+            <app-specialty-mark [specialty]="selectedSpecialtyName()" />
+            <select formControlName="specialtyId">
+              <option value="">انتخاب کنید</option>
+              @for (item of specialtyOptions(); track item.id) {
+                <option [value]="item.id">{{ item.name }}</option>
+              }
+            </select>
+            <button type="button" class="specialty-add-button" aria-label="افزودن تخصص" (click)="toggleCustomSpecialty()">+</button>
           </span>
-        }
-      </label>
-      <label><span class="field-label required">شماره نظام پزشکی</span> <input formControlName="licenseNumber" /></label>
-      <label><span class="field-label required">تلفن</span> <input formControlName="phone" /></label>
-      <label><span class="field-label required">ایمیل</span> <input type="email" formControlName="email" /></label>
+          @if (addingSpecialty()) {
+            <span class="specialty-add">
+              <input
+                [value]="customSpecialty()"
+                (input)="onCustomSpecialty($event)"
+                (keydown.enter)="$event.preventDefault(); addSpecialty()"
+                placeholder="تخصص جدید"
+                maxlength="80"
+                autocomplete="off"
+              />
+              <button type="button" class="button" (click)="addSpecialty()">افزودن</button>
+            </span>
+          }
+        </label>
+        <label><span class="field-label required">شماره نظام پزشکی</span> <input formControlName="licenseNumber" /></label>
+        <label><span class="field-label required">تلفن</span> <input formControlName="phone" /></label>
+        <label class="wide"><span class="field-label required">ایمیل</span> <input type="email" formControlName="email" /></label>
+      </div>
       <div class="dialog-actions">
-        <button class="button secondary" type="button" (click)="close()">انصراف</button>
-        <button class="button" type="submit" [disabled]="saving()">{{ saving() ? 'در حال ذخیره...' : 'ذخیره' }}</button>
+        <button class="button dialog-save" type="submit" [disabled]="saving()">{{ saving() ? 'در حال ذخیره...' : 'ذخیره' }}</button>
       </div>
     </form>
   </div>

@@ -3,6 +3,12 @@
     <p class="eyebrow">امروز، {{ today }}</p>
     <h1>داشبورد پذیرش</h1>
   </div>
+  <div class="clinic-art-row" aria-hidden="true">
+    <app-clinic-art kind="syringe" />
+    <app-clinic-art kind="pill" />
+    <app-clinic-art kind="tablet" />
+    <app-clinic-art kind="bottle" />
+  </div>
 </header>
 
 @if (error()) {
@@ -13,18 +19,22 @@
   <article class="stat-patients">
     <span>بیماران</span>
     <strong>{{ data()?.patientCount ?? '—' }}</strong>
+    <app-clinic-art class="stat-art" kind="pill" />
   </article>
   <article class="stat-doctors">
     <span>پزشکان</span>
     <strong>{{ data()?.doctorCount ?? '—' }}</strong>
+    <app-clinic-art class="stat-art" kind="syringe" />
   </article>
   <article class="stat-today">
     <span>نوبت‌های امروز</span>
     <strong>{{ data()?.todayAppointmentCount ?? '—' }}</strong>
+    <app-clinic-art class="stat-art" kind="bandage" />
   </article>
   <article class="stat-open">
     <span>نوبت‌های باز</span>
     <strong>{{ data()?.scheduledAppointmentCount ?? '—' }}</strong>
+    <app-clinic-art class="stat-art" kind="tablet" />
   </article>
 </section>
 
@@ -35,7 +45,10 @@
   @if (loading()) {
     <app-list-loading label="در حال خواندن نوبت‌ها..." />
   } @else if (!data()?.todayAppointments?.length) {
-    <p class="muted">برای امروز نوبتی ثبت نشده است.</p>
+    <div class="empty-state">
+      <app-clinic-art kind="bottle" />
+      <p>برای امروز نوبتی ثبت نشده است.</p>
+    </div>
   } @else {
     <table>
       <thead>

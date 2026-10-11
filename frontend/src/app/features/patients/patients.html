@@ -1,7 +1,10 @@
 <header class="page-head">
-  <div>
-    <p class="eyebrow">پرونده‌ها</p>
-    <h1>بیماران</h1>
+  <div class="page-title">
+    <div>
+      <p class="eyebrow">پرونده‌ها</p>
+      <h1>بیماران</h1>
+    </div>
+    <app-clinic-art class="page-art" kind="pill" />
   </div>
   <button class="button" type="button" (click)="openCreate()">بیمار جدید</button>
 </header>
@@ -26,7 +29,10 @@
   @if (loading()) {
     <app-list-loading />
   } @else if (!patients().length) {
-    <p class="muted">بیماری با این مشخصات پیدا نشد.</p>
+    <div class="empty-state">
+      <app-clinic-art kind="tablet" />
+      <p>بیماری با این مشخصات پیدا نشد.</p>
+    </div>
   } @else {
     <table>
       <thead>
@@ -62,27 +68,41 @@
 @if (editorOpen()) {
   <div class="backdrop" (click)="close()">
     <form class="dialog" [formGroup]="form" (click)="$event.stopPropagation()" (ngSubmit)="save()">
-      <h2>{{ editingId() ? 'ویرایش بیمار' : 'بیمار جدید' }}</h2>
-      <label><span class="field-label required">نام</span> <input formControlName="firstName" /></label>
-      <label><span class="field-label required">نام خانوادگی</span> <input formControlName="lastName" /></label>
-      <label><span class="field-label required">کد ملی</span> <input formControlName="nationalId" maxlength="10" /></label>
-      <label><span class="field-label required">تلفن</span> <input formControlName="phone" /></label>
-      <label><span class="field-label required">تاریخ تولد</span> <app-shamsi-date formControlName="dateOfBirth" /></label>
-      <label>
-        <span class="field-label required">جنسیت</span>
-        <span class="specialty-field">
-          <app-gender-mark [gender]="form.controls.gender.value" />
-          <select formControlName="gender">
-            <option value="Female">زن</option>
-            <option value="Male">مرد</option>
-            <option value="Unknown">نامشخص</option>
-          </select>
-        </span>
-      </label>
-      <label>آدرس <textarea formControlName="address" rows="3"></textarea></label>
+      <div class="dialog-head">
+        <div class="dialog-title">
+          <app-clinic-art kind="pill" />
+          <div>
+            <p class="eyebrow">پرونده</p>
+            <h2>{{ editingId() ? 'ویرایش بیمار' : 'بیمار جدید' }}</h2>
+          </div>
+        </div>
+        <button type="button" class="dialog-close" aria-label="بستن" (click)="close()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
+            <path d="M7 7 17 17M17 7 7 17" />
+          </svg>
+        </button>
+      </div>
+      <div class="dialog-grid">
+        <label><span class="field-label required">نام</span> <input formControlName="firstName" /></label>
+        <label><span class="field-label required">نام خانوادگی</span> <input formControlName="lastName" /></label>
+        <label><span class="field-label required">کد ملی</span> <input formControlName="nationalId" maxlength="10" /></label>
+        <label><span class="field-label required">تلفن</span> <input formControlName="phone" /></label>
+        <label class="wide"><span class="field-label required">تاریخ تولد</span> <app-shamsi-date formControlName="dateOfBirth" /></label>
+        <label class="wide">
+          <span class="field-label required">جنسیت</span>
+          <span class="specialty-field">
+            <app-gender-mark [gender]="form.controls.gender.value" />
+            <select formControlName="gender">
+              <option value="Female">زن</option>
+              <option value="Male">مرد</option>
+              <option value="Unknown">نامشخص</option>
+            </select>
+          </span>
+        </label>
+        <label class="wide">آدرس <textarea formControlName="address" rows="3"></textarea></label>
+      </div>
       <div class="dialog-actions">
-        <button class="button secondary" type="button" (click)="close()">انصراف</button>
-        <button class="button" type="submit" [disabled]="saving()">{{ saving() ? 'در حال ذخیره...' : 'ذخیره' }}</button>
+        <button class="button dialog-save" type="submit" [disabled]="saving()">{{ saving() ? 'در حال ذخیره...' : 'ذخیره' }}</button>
       </div>
     </form>
   </div>

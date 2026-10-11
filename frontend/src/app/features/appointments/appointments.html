@@ -1,7 +1,10 @@
 <header class="page-head">
-  <div>
-    <p class="eyebrow">زمان‌بندی</p>
-    <h1>نوبت‌ها</h1>
+  <div class="page-title">
+    <div>
+      <p class="eyebrow">زمان‌بندی</p>
+      <h1>نوبت‌ها</h1>
+    </div>
+    <app-clinic-art class="page-art" kind="bottle" />
   </div>
   <button class="button" type="button" (click)="openCreate()">نوبت جدید</button>
 </header>
@@ -26,7 +29,10 @@
   @if (loading()) {
     <app-list-loading label="در حال خواندن نوبت‌ها..." />
   } @else if (!appointments().length) {
-    <p class="muted">نوبتی پیدا نشد.</p>
+    <div class="empty-state">
+      <app-clinic-art kind="syringe" />
+      <p>نوبتی پیدا نشد.</p>
+    </div>
   } @else {
     <table>
       <thead>
@@ -67,45 +73,59 @@
 @if (editorOpen()) {
   <div class="backdrop" (click)="close()">
     <form class="dialog" [formGroup]="form" (click)="$event.stopPropagation()" (ngSubmit)="save()">
-      <h2>{{ editingId() ? 'ویرایش نوبت' : 'نوبت جدید' }}</h2>
-      <label>
-        <span class="field-label required">بیمار</span>
-        <select formControlName="patientId">
-          <option value="">انتخاب کنید</option>
-          @for (patient of patients(); track patient.id) {
-            <option [value]="patient.id">{{ name(patient.firstName, patient.lastName) }}</option>
+      <div class="dialog-head">
+        <div class="dialog-title">
+          <app-clinic-art kind="bottle" />
+          <div>
+            <p class="eyebrow">زمان‌بندی</p>
+            <h2>{{ editingId() ? 'ویرایش نوبت' : 'نوبت جدید' }}</h2>
+          </div>
+        </div>
+        <button type="button" class="dialog-close" aria-label="بستن" (click)="close()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
+            <path d="M7 7 17 17M17 7 7 17" />
+          </svg>
+        </button>
+      </div>
+      <div class="dialog-grid">
+        <label class="wide">
+          <span class="field-label required">بیمار</span>
+          <select formControlName="patientId">
+            <option value="">انتخاب کنید</option>
+            @for (patient of patients(); track patient.id) {
+              <option [value]="patient.id">{{ name(patient.firstName, patient.lastName) }}</option>
+            }
+          </select>
+        </label>
+        <label class="wide">
+          <span class="field-label required">پزشک</span>
+          <select formControlName="doctorId">
+            <option value="">انتخاب کنید</option>
+            @for (doctor of doctors(); track doctor.id) {
+              <option [value]="doctor.id">{{ name(doctor.firstName, doctor.lastName) }} · {{ specialtyName(doctor.specialty) }}</option>
+            }
+          </select>
+          @if (selectedSpecialty(); as specialty) {
+            <span class="specialty">
+              <app-specialty-mark [specialty]="specialty" />
+              {{ specialtyName(specialty) }}
+            </span>
           }
-        </select>
-      </label>
-      <label>
-        <span class="field-label required">پزشک</span>
-        <select formControlName="doctorId">
-          <option value="">انتخاب کنید</option>
-          @for (doctor of doctors(); track doctor.id) {
-            <option [value]="doctor.id">{{ name(doctor.firstName, doctor.lastName) }} · {{ specialtyName(doctor.specialty) }}</option>
-          }
-        </select>
-        @if (selectedSpecialty(); as specialty) {
-          <span class="specialty">
-            <app-specialty-mark [specialty]="specialty" />
-            {{ specialtyName(specialty) }}
-          </span>
-        }
-      </label>
-      <label><span class="field-label required">زمان</span> <app-shamsi-date formControlName="scheduledAt" [withTime]="true" /></label>
-      <label><span class="field-label required">دلیل مراجعه</span> <input formControlName="reason" /></label>
-      <label>
-        <span class="field-label required">وضعیت</span>
-        <select formControlName="status">
-          <option value="Scheduled">برنامه‌ریزی‌شده</option>
-          <option value="Completed">انجام‌شده</option>
-          <option value="Cancelled">لغو‌شده</option>
-        </select>
-      </label>
-      <label>یادداشت <textarea formControlName="notes" rows="3"></textarea></label>
+        </label>
+        <label class="wide"><span class="field-label required">زمان</span> <app-shamsi-date formControlName="scheduledAt" [withTime]="true" /></label>
+        <label><span class="field-label required">دلیل مراجعه</span> <input formControlName="reason" /></label>
+        <label>
+          <span class="field-label required">وضعیت</span>
+          <select formControlName="status">
+            <option value="Scheduled">برنامه‌ریزی‌شده</option>
+            <option value="Completed">انجام‌شده</option>
+            <option value="Cancelled">لغو‌شده</option>
+          </select>
+        </label>
+        <label class="wide">یادداشت <textarea formControlName="notes" rows="3"></textarea></label>
+      </div>
       <div class="dialog-actions">
-        <button class="button secondary" type="button" (click)="close()">انصراف</button>
-        <button class="button" type="submit" [disabled]="saving()">{{ saving() ? 'در حال ذخیره...' : 'ذخیره' }}</button>
+        <button class="button dialog-save" type="submit" [disabled]="saving()">{{ saving() ? 'در حال ذخیره...' : 'ذخیره' }}</button>
       </div>
     </form>
   </div>
