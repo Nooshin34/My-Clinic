@@ -1,0 +1,127 @@
+<header class="page-head">
+  <div class="page-title">
+    <div>
+      <p class="eyebrow">وقت ویزیت</p>
+      <h1>برنامه پزشکان</h1>
+    </div>
+    <app-clinic-art class="page-art" kind="bandage" />
+  </div>
+</header>
+
+@if (error()) {
+  <p class="banner">{{ error() }}</p>
+}
+
+<section class="panel-card schedule">
+  <label class="schedule-doctor">
+    <span class="field-label required">پزشک</span>
+    <select [value]="doctorId()" (change)="chooseDoctor($event)">
+      <option value="">انتخاب کنید</option>
+      @for (doctor of doctors(); track doctor.id) {
+        <option [value]="doctor.id">{{ name(doctor.firstName, doctor.lastName) }} · {{ specialtyName(doctor.specialty) }}</option>
+      }
+    </select>
+  </label>
+
+  @if (!doctorId()) {
+    <p class="slot-hint">پزشک را انتخاب کنید تا ساعت‌های حضوری یا آنلاینش را برای روزهای مختلف بگذارید.</p>
+  } @else {
+    <div class="schedule-nav">
+      <button type="button" class="button secondary" [disabled]="!canGoBack()" (click)="shift(-7)">هفته قبل</button>
+      <strong>{{ selectedLabel() }}</strong>
+      <button type="button" class="button secondary" (click)="shift(7)">هفته بعد</button>
+    </div>
+
+    <div class="day-strip">
+      @for (day of days(); track day.iso) {
+        <button type="button" class="day-chip" [class.active]="selectedDate() === day.iso" (click)="pickDay(day.iso)">
+          <small>{{ day.weekday }}</small>
+          <strong>{{ day.label }}</strong>
+          @if (day.count) {
+            <span>{{ digits(day.count) }} ساعت</span>
+          }
+        </button>
+      }
+    </div>
+
+    <form class="schedule-form" (submit)="$event.preventDefault(); save()">
+      <div class="visit-toggle" role="group" aria-label="نوع ویزیت">
+        <button type="button" [attr.aria-pressed]="visitKind() === 'InPerson'" (click)="setVisit('InPerson')">حضوری</button>
+        <button type="button" [attr.aria-pressed]="visitKind() === 'Online'" (click)="setVisit('Online')">آنلاین</button>
+      </div>
+
+      <label>
+        از ساعت
+        <span class="clock-fields">
+          <select [value]="startHour()" (change)="setNumber('startHour', $event)">
+            @for (hour of hours; track hour) {
+              <option [value]="hour">{{ pad(hour) }}</option>
+            }
+          </select>
+          <select [value]="startMinute()" (change)="setNumber('startMinute', $event)">
+            @for (minute of minutes; track minute) {
+              <option [value]="minute">{{ pad(minute) }}</option>
+            }
+          </select>
+        </span>
+      </label>
+
+      @if (!single()) {
+        <label>
+          تا ساعت
+          <span class="clock-fields">
+            <select [value]="endHour()" (change)="setNumber('endHour', $event)">
+              @for (hour of hours; track hour) {
+                <option [value]="hour">{{ pad(hour) }}</option>
+              }
+            </select>
+            <select [value]="endMinute()" (change)="setNumber('endMinute', $event)">
+              @for (minute of minutes; track minute) {
+                <option [value]="minute">{{ pad(minute) }}</option>
+              }
+            </select>
+          </span>
+        </label>
+      }
+
+      <label>
+        مدت هر نوبت
+        <select [value]="duration()" (change)="setNumber('duration', $event)">
+          @for (item of durations; track item) {
+            <option [value]="item">{{ digits(item) }} دقیقه</option>
+          }
+        </select>
+      </label>
+
+      <label class="check-line">
+        <input type="checkbox" [checked]="single()" (change)="setSingle($event)" />
+        فقط یک ساعت
+      </label>
+
+      <button class="button" type="submit" [disabled]="saving()">{{ saving() ? 'در حال ثبت...' : 'ثبت ساعت‌ها' }}</button>
+    </form>
+
+    <p class="slot-hint">ساعت‌ها به وقت تهران است. اگر تا ساعت را پر کنید، به اندازه مدت هر نوبت تکه‌تکه می‌شود.</p>
+
+    @if (loading()) {
+      <p class="slot-hint">در حال خواندن برنامه...</p>
+    } @else if (!daySlots().length) {
+      <p class="slot-hint">برای این تاریخ ساعتی ثبت نشده.</p>
+    } @else {
+      <div class="slot-board">
+        @for (slot of daySlots(); track slot.id) {
+          <article class="slot-card">
+            <strong>{{ clock(slot.startTime) }}</strong>
+            <span class="pill" [class.Online]="slot.visitKind === 'Online'" [class.InPerson]="slot.visitKind === 'InPerson'">{{ visit(slot.visitKind) }}</span>
+            <small>{{ digits(slot.durationMinutes) }} دقیقه</small>
+            @if (slot.booked) {
+              <span class="pill">رزرو شده</span>
+            } @else {
+              <button type="button" class="text-danger" (click)="remove(slot)">حذف</button>
+            }
+          </article>
+        }
+      </div>
+    }
+  }
+</section>

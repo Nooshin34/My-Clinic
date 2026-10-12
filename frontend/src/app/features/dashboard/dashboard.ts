@@ -1,7 +1,7 @@
 import { Component, inject, signal } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 import { ClinicApi } from '../../core/clinic-api';
-import { formatWhen, readApiError, statusLabel, todayShamsi } from '../../core/labels';
+import { formatWhen, readApiError, statusLabel, todayShamsi, visitKindLabel } from '../../core/labels';
 import { Dashboard as DashboardData } from '../../core/models';
 import { specialtyLabel } from '../../core/specialty-visual';
 import { ClinicArt } from '../../shared/clinic-art/clinic-art';
@@ -20,6 +20,7 @@ export class Dashboard {
   protected readonly error = signal<string | null>(null);
   protected readonly when = formatWhen;
   protected readonly status = statusLabel;
+  protected readonly visit = visitKindLabel;
   protected readonly today = todayShamsi();
   protected readonly specialtyName = specialtyLabel;
 

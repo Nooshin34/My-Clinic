@@ -54,6 +54,11 @@ namespace Clinic.Infrastructure.Persistence.Migrations
                         .HasMaxLength(16)
                         .HasColumnType("character varying(16)");
 
+                    b.Property<string>("VisitKind")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)");
+
                     b.HasKey("Id");
 
                     b.HasIndex("PatientId");
@@ -61,6 +66,40 @@ namespace Clinic.Infrastructure.Persistence.Migrations
                     b.HasIndex("DoctorId", "ScheduledAtUtc");
 
                     b.ToTable("appointments", (string)null);
+                });
+
+            modelBuilder.Entity("Clinic.Domain.Entities.AvailabilitySlot", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateOnly>("Date")
+                        .HasColumnType("date");
+
+                    b.Property<Guid>("DoctorId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("DurationMinutes")
+                        .HasColumnType("integer");
+
+                    b.Property<TimeOnly>("StartTime")
+                        .HasColumnType("time without time zone");
+
+                    b.Property<string>("VisitKind")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DoctorId", "Date", "StartTime")
+                        .IsUnique();
+
+                    b.ToTable("availability_slots", (string)null);
                 });
 
             modelBuilder.Entity("Clinic.Domain.Entities.Doctor", b =>
@@ -331,6 +370,17 @@ namespace Clinic.Infrastructure.Persistence.Migrations
                     b.Navigation("Patient");
                 });
 
+            modelBuilder.Entity("Clinic.Domain.Entities.AvailabilitySlot", b =>
+                {
+                    b.HasOne("Clinic.Domain.Entities.Doctor", "Doctor")
+                        .WithMany("Availability")
+                        .HasForeignKey("DoctorId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Doctor");
+                });
+
             modelBuilder.Entity("Clinic.Domain.Entities.Doctor", b =>
                 {
                     b.HasOne("Clinic.Domain.Entities.Specialty", "Specialty")
@@ -345,6 +395,8 @@ namespace Clinic.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("Clinic.Domain.Entities.Doctor", b =>
                 {
                     b.Navigation("Appointments");
+
+                    b.Navigation("Availability");
                 });
 
             modelBuilder.Entity("Clinic.Domain.Entities.Patient", b =>

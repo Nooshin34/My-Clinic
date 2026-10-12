@@ -48,7 +48,14 @@
       <tbody>
         @for (item of appointments(); track item.id) {
           <tr>
-            <td>{{ when(item.scheduledAtUtc) }}</td>
+            <td>
+              <div class="when-cell">
+                <span>{{ when(item.scheduledAtUtc) }}</span>
+                @if (item.visitKind) {
+                  <span class="pill" [class.Online]="item.visitKind === 'Online'" [class.InPerson]="item.visitKind === 'InPerson'">{{ visit(item.visitKind) }}</span>
+                }
+              </div>
+            </td>
             <td>{{ item.patientName }}</td>
             <td>
               <span class="specialty">
@@ -72,7 +79,7 @@
 
 @if (editorOpen()) {
   <div class="backdrop" (click)="close()">
-    <form class="dialog" [formGroup]="form" (click)="$event.stopPropagation()" (ngSubmit)="save()">
+    <form class="dialog dialog-slots" [formGroup]="form" (click)="$event.stopPropagation()" (ngSubmit)="save()">
       <div class="dialog-head">
         <div class="dialog-title">
           <app-clinic-art kind="bottle" />
@@ -87,6 +94,9 @@
           </svg>
         </button>
       </div>
+      @if (error()) {
+        <p class="banner">{{ error() }}</p>
+      }
       <div class="dialog-grid">
         <label class="wide">
           <span class="field-label required">بیمار</span>
@@ -99,7 +109,7 @@
         </label>
         <label class="wide">
           <span class="field-label required">پزشک</span>
-          <select formControlName="doctorId">
+          <select formControlName="doctorId" (change)="onDoctorChange()">
             <option value="">انتخاب کنید</option>
             @for (doctor of doctors(); track doctor.id) {
               <option [value]="doctor.id">{{ name(doctor.firstName, doctor.lastName) }} · {{ specialtyName(doctor.specialty) }}</option>
@@ -112,7 +122,44 @@
             </span>
           }
         </label>
-        <label class="wide"><span class="field-label required">زمان</span> <app-shamsi-date formControlName="scheduledAt" [withTime]="true" /></label>
+        <div class="wide slot-picker">
+          <span class="field-label required">زمان</span>
+          @if (slotError()) {
+            <p class="slot-hint">{{ slotError() }}</p>
+          } @else if (!form.controls.doctorId.value) {
+            <p class="slot-hint">اول پزشک را انتخاب کنید تا ساعت‌های آزادش نمایش داده شود.</p>
+          } @else if (slotsLoading()) {
+            <p class="slot-hint">در حال خواندن ساعت‌ها...</p>
+          } @else if (!slotDays().length) {
+            <p class="slot-hint">برای این پزشک در روزهای پیش رو ساعت آزادی ثبت نشده. از صفحه برنامه پزشکان ساعت بگذارید.</p>
+          } @else {
+            <div class="day-strip">
+              @for (day of slotDays(); track day.date) {
+                <button type="button" class="day-chip" [class.active]="selectedDate() === day.date" (click)="selectedDate.set(day.date)">
+                  <small>{{ day.weekday }}</small>
+                  <strong>{{ day.label }}</strong>
+                </button>
+              }
+            </div>
+            <div class="slot-board">
+              @for (slot of daySlots(); track slot.id) {
+                <button
+                  type="button"
+                  class="slot-choice"
+                  [class.selected]="isSelected(slot)"
+                  [disabled]="!canPick(slot)"
+                  (click)="pickSlot(slot)"
+                >
+                  <strong>{{ clock(slot.startTime) }}</strong>
+                  <span class="pill" [class.Online]="slot.visitKind === 'Online'" [class.InPerson]="slot.visitKind === 'InPerson'">{{ visit(slot.visitKind) }}</span>
+                </button>
+              }
+            </div>
+          }
+          @if (form.controls.scheduledAt.touched && form.controls.scheduledAt.invalid) {
+            <p class="slot-hint slot-hint-warn">یک ساعت را انتخاب کنید.</p>
+          }
+        </div>
         <label><span class="field-label required">دلیل مراجعه</span> <input formControlName="reason" /></label>
         <label>
           <span class="field-label required">وضعیت</span>

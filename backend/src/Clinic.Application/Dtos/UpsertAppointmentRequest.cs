@@ -6,4 +6,5 @@ public sealed record UpsertAppointmentRequest(
     DateTime ScheduledAtUtc,
     string Reason,
     string Status,
-    string? Notes);
+    string? Notes,
+    string? VisitKind);

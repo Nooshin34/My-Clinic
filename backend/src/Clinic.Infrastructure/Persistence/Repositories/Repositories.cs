@@ -135,6 +135,16 @@ public sealed class AppointmentRepository(ClinicDbContext db) : IAppointmentRepo
             appointment.Status != AppointmentStatus.Cancelled &&
             (ignoreId == null || appointment.Id != ignoreId), cancellationToken);
 
+    public async Task<IReadOnlyList<DateTime>> BusyTimesAsync(Guid doctorId, DateTime fromUtc, DateTime toUtc, CancellationToken cancellationToken) =>
+        await db.Appointments.AsNoTracking()
+            .Where(appointment =>
+                appointment.DoctorId == doctorId &&
+                appointment.Status != AppointmentStatus.Cancelled &&
+                appointment.ScheduledAtUtc >= fromUtc &&
+                appointment.ScheduledAtUtc < toUtc)
+            .Select(appointment => appointment.ScheduledAtUtc)
+            .ToListAsync(cancellationToken);
+
     public Task AddAsync(Appointment appointment, CancellationToken cancellationToken) =>
         db.Appointments.AddAsync(appointment, cancellationToken).AsTask();
 
@@ -145,6 +155,28 @@ public sealed class AppointmentRepository(ClinicDbContext db) : IAppointmentRepo
             .Include(appointment => appointment.Patient)
             .Include(appointment => appointment.Doctor)
             .ThenInclude(doctor => doctor.Specialty);
+}
+
+public sealed class AvailabilityRepository(ClinicDbContext db) : IAvailabilityRepository
+{
+    public async Task<IReadOnlyList<AvailabilitySlot>> ListAsync(Guid doctorId, DateOnly from, DateOnly to, CancellationToken cancellationToken) =>
+        await db.AvailabilitySlots.AsNoTracking()
+            .Where(slot => slot.DoctorId == doctorId && slot.Date >= from && slot.Date <= to)
+            .OrderBy(slot => slot.Date)
+            .ThenBy(slot => slot.StartTime)
+            .ToListAsync(cancellationToken);
+
+    public Task<AvailabilitySlot?> FindAsync(Guid doctorId, DateOnly date, TimeOnly startTime, CancellationToken cancellationToken) =>
+        db.AvailabilitySlots.AsNoTracking()
+            .FirstOrDefaultAsync(slot => slot.DoctorId == doctorId && slot.Date == date && slot.StartTime == startTime, cancellationToken);
+
+    public Task<AvailabilitySlot?> GetByIdAsync(Guid id, CancellationToken cancellationToken) =>
+        db.AvailabilitySlots.FirstOrDefaultAsync(slot => slot.Id == id, cancellationToken);
+
+    public Task AddRangeAsync(IEnumerable<AvailabilitySlot> slots, CancellationToken cancellationToken) =>
+        db.AvailabilitySlots.AddRangeAsync(slots, cancellationToken);
+
+    public void Remove(AvailabilitySlot slot) => db.AvailabilitySlots.Remove(slot);
 }
 
 public sealed class SpecialtyRepository(ClinicDbContext db) : ISpecialtyRepository

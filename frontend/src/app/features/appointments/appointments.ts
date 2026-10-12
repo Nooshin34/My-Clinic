@@ -2,18 +2,18 @@ import { Component, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { firstValueFrom } from 'rxjs';
 import { ClinicApi } from '../../core/clinic-api';
-import { formatWhen, fullName, readApiError, statusLabel } from '../../core/labels';
-import { Appointment, Doctor, Patient } from '../../core/models';
+import { addLocalDays, formatClock, formatShamsiDay, isoDateLocal, weekdayName } from '../../core/jalali';
+import { formatWhen, fullName, readApiError, statusLabel, visitKindLabel } from '../../core/labels';
+import { Appointment, AvailabilitySlot, Doctor, Patient } from '../../core/models';
 import { specialtyLabel } from '../../core/specialty-visual';
 import { ClinicArt } from '../../shared/clinic-art/clinic-art';
 import { ListLoading } from '../../shared/list-loading/list-loading';
 import { Pager } from '../../shared/pager/pager';
-import { ShamsiDate } from '../../shared/shamsi-date/shamsi-date';
 import { SpecialtyMark } from '../../shared/specialty-mark/specialty-mark';
 
 @Component({
   selector: 'app-appointments',
-  imports: [ReactiveFormsModule, SpecialtyMark, ShamsiDate, Pager, ListLoading, ClinicArt],
+  imports: [ReactiveFormsModule, SpecialtyMark, Pager, ListLoading, ClinicArt],
   templateUrl: './appointments.html',
 })
 export class Appointments {
@@ -31,14 +31,23 @@ export class Appointments {
   protected readonly totalPages = signal(0);
   protected readonly editorOpen = signal(false);
   protected readonly editingId = signal<string | null>(null);
+  protected readonly slots = signal<AvailabilitySlot[]>([]);
+  protected readonly slotsLoading = signal(false);
+  protected readonly slotError = signal<string | null>(null);
+  protected readonly selectedDate = signal<string | null>(null);
+  private readonly reservedDoctorId = signal<string | null>(null);
+  private readonly reservedStartsAt = signal<string | null>(null);
   protected readonly name = fullName;
   protected readonly when = formatWhen;
   protected readonly status = statusLabel;
+  protected readonly visit = visitKindLabel;
+  protected readonly clock = formatClock;
   protected readonly specialtyName = specialtyLabel;
   protected readonly form = this.formBuilder.nonNullable.group({
     patientId: ['', Validators.required],
     doctorId: ['', Validators.required],
     scheduledAt: ['', Validators.required],
+    visitKind: [''],
     reason: ['', Validators.required],
     status: ['Scheduled', Validators.required],
     notes: [''],
@@ -57,23 +66,82 @@ export class Appointments {
     this.search.set((event.target as HTMLInputElement).value);
   }
 
+  protected slotDays(): Array<{ date: string; weekday: string; label: string }> {
+    const seen = new Set<string>();
+    const days: Array<{ date: string; weekday: string; label: string }> = [];
+    for (const slot of this.slots()) {
+      if (seen.has(slot.date)) continue;
+      seen.add(slot.date);
+      const [year, month, day] = slot.date.split('-').map(Number);
+      const date = new Date(year, month - 1, day);
+      days.push({
+        date: slot.date,
+        weekday: weekdayName(date),
+        label: formatShamsiDay(slot.date).replace(`${weekdayName(date)} `, ''),
+      });
+    }
+    return days;
+  }
+
+  protected daySlots(): AvailabilitySlot[] {
+    return this.slots().filter((slot) => slot.date === this.selectedDate());
+  }
+
+  protected canPick(slot: AvailabilitySlot): boolean {
+    if (!slot.booked) return true;
+    return this.form.controls.doctorId.value === this.reservedDoctorId()
+      && sameInstant(slot.startsAtUtc, this.reservedStartsAt());
+  }
+
+  protected isSelected(slot: AvailabilitySlot): boolean {
+    return sameInstant(slot.startsAtUtc, this.form.controls.scheduledAt.value);
+  }
+
+  protected pickSlot(slot: AvailabilitySlot): void {
+    if (!this.canPick(slot)) return;
+    this.selectedDate.set(slot.date);
+    this.form.controls.scheduledAt.setValue(slot.startsAtUtc);
+    this.form.controls.visitKind.setValue(slot.visitKind);
+  }
+
+  protected onDoctorChange(): void {
+    const doctorId = this.form.controls.doctorId.value;
+    if (doctorId === this.reservedDoctorId() && this.reservedStartsAt()) {
+      this.form.controls.scheduledAt.setValue(this.reservedStartsAt() ?? '');
+    } else {
+      this.form.controls.scheduledAt.setValue('');
+      this.form.controls.visitKind.setValue('');
+    }
+    void this.loadSlots(doctorId);
+  }
+
   protected openCreate(): void {
     this.editingId.set(null);
-    this.form.reset({ status: 'Scheduled', patientId: '', doctorId: '', notes: '' });
+    this.reservedDoctorId.set(null);
+    this.reservedStartsAt.set(null);
+    this.slots.set([]);
+    this.selectedDate.set(null);
+    this.slotError.set(null);
+    this.form.reset({ status: 'Scheduled', patientId: '', doctorId: '', scheduledAt: '', visitKind: '', notes: '' });
     this.editorOpen.set(true);
   }
 
   protected openEdit(item: Appointment): void {
     this.editingId.set(item.id);
+    this.reservedDoctorId.set(item.doctorId);
+    this.reservedStartsAt.set(item.scheduledAtUtc);
+    this.slotError.set(null);
     this.form.setValue({
       patientId: item.patientId,
       doctorId: item.doctorId,
       scheduledAt: item.scheduledAtUtc,
+      visitKind: item.visitKind ?? '',
       reason: item.reason,
       status: item.status,
       notes: item.notes ?? '',
     });
     this.editorOpen.set(true);
+    void this.loadSlots(item.doctorId);
   }
 
   protected close(): void {
@@ -127,6 +195,7 @@ export class Appointments {
       reason: raw.reason,
       status: raw.status,
       notes: raw.notes.trim() ? raw.notes.trim() : null,
+      visitKind: raw.visitKind || null,
     };
 
     try {
@@ -145,6 +214,31 @@ export class Appointments {
     }
   }
 
+  private async loadSlots(doctorId: string): Promise<void> {
+    if (!doctorId) {
+      this.slots.set([]);
+      this.selectedDate.set(null);
+      return;
+    }
+
+    this.slotsLoading.set(true);
+    this.slotError.set(null);
+    try {
+      const from = isoDateLocal(new Date());
+      const to = isoDateLocal(addLocalDays(new Date(), 60));
+      const items = await firstValueFrom(this.api.availability(doctorId, from, to));
+      this.slots.set(items);
+      const current = this.form.controls.scheduledAt.value;
+      const match = items.find((slot) => sameInstant(slot.startsAtUtc, current));
+      this.selectedDate.set(match?.date ?? items[0]?.date ?? null);
+    } catch (error) {
+      this.slots.set([]);
+      this.slotError.set(readApiError(error));
+    } finally {
+      this.slotsLoading.set(false);
+    }
+  }
+
   protected async remove(item: Appointment): Promise<void> {
     if (!window.confirm(`نوبت ${item.patientName} حذف شود؟`)) {
       return;
@@ -158,4 +252,11 @@ export class Appointments {
       this.error.set(readApiError(error));
     }
   }
+}
+
+function sameInstant(left: string | null, right: string | null): boolean {
+  if (!left || !right) return false;
+  const first = new Date(left).getTime();
+  const second = new Date(right).getTime();
+  return !Number.isNaN(first) && Math.floor(first / 60000) === Math.floor(second / 60000);
 }

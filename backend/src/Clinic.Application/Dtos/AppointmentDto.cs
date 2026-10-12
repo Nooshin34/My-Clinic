@@ -10,4 +10,5 @@ public sealed record AppointmentDto(
     DateTime ScheduledAtUtc,
     string Reason,
     string Status,
+    string VisitKind,
     string? Notes);

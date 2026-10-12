@@ -12,6 +12,13 @@ public static class ClinicEnums
         _ => null
     };
 
+    public static VisitKind? ParseVisitKind(string? value) => Normalize(value) switch
+    {
+        "inperson" or "in-person" or "حضوری" => VisitKind.InPerson,
+        "online" or "آنلاین" => VisitKind.Online,
+        _ => null
+    };
+
     public static AppointmentStatus? ParseStatus(string? value) => Normalize(value) switch
     {
         "scheduled" or "برنامهریزی شده" or "برنامه‌ریزی‌شده" => AppointmentStatus.Scheduled,

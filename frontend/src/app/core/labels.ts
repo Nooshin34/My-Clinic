@@ -12,6 +12,10 @@ export function genderLabel(value: string): string {
   }
 }
 
+export function visitKindLabel(value: string): string {
+  return value === 'Online' ? 'آنلاین' : 'حضوری';
+}
+
 export function statusLabel(value: string): string {
   switch (value) {
     case 'Completed':

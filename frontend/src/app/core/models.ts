@@ -54,6 +54,7 @@ export interface Appointment {
   scheduledAtUtc: string;
   reason: string;
   status: string;
+  visitKind: string;
   notes: string | null;
 }
 
@@ -64,6 +65,26 @@ export interface AppointmentInput {
   reason: string;
   status: string;
   notes: string | null;
+  visitKind: string | null;
+}
+
+export interface AvailabilitySlot {
+  id: string;
+  doctorId: string;
+  date: string;
+  startTime: string;
+  durationMinutes: number;
+  visitKind: string;
+  startsAtUtc: string;
+  booked: boolean;
+}
+
+export interface AvailabilityInput {
+  date: string;
+  startTime: string;
+  endTime: string | null;
+  durationMinutes: number;
+  visitKind: string;
 }
 
 export interface Page<T> {

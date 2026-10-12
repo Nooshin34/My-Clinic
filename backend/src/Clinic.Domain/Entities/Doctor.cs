@@ -19,4 +19,6 @@ public class Doctor : Entity
     public string LicenseNumber { get; set; } = string.Empty;
 
     public ICollection<Appointment> Appointments { get; set; } = new List<Appointment>();
+
+    public ICollection<AvailabilitySlot> Availability { get; set; } = new List<AvailabilitySlot>();
 }

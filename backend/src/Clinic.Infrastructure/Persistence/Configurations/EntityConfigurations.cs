@@ -106,6 +106,27 @@ public class AppointmentConfiguration : IEntityTypeConfiguration<Appointment>
             .HasForeignKey(appointment => appointment.DoctorId)
             .OnDelete(DeleteBehavior.Restrict);
 
+        builder.Property(appointment => appointment.VisitKind).HasConversion<string>().HasMaxLength(16);
         builder.HasIndex(appointment => new { appointment.DoctorId, appointment.ScheduledAtUtc });
+    }
+}
+
+public class AvailabilitySlotConfiguration : IEntityTypeConfiguration<AvailabilitySlot>
+{
+    public void Configure(EntityTypeBuilder<AvailabilitySlot> builder)
+    {
+        builder.ToTable("availability_slots");
+        builder.HasKey(slot => slot.Id);
+        builder.Property(slot => slot.Date).IsRequired();
+        builder.Property(slot => slot.StartTime).IsRequired();
+        builder.Property(slot => slot.DurationMinutes).IsRequired();
+        builder.Property(slot => slot.VisitKind).HasConversion<string>().HasMaxLength(16);
+
+        builder.HasOne(slot => slot.Doctor)
+            .WithMany(doctor => doctor.Availability)
+            .HasForeignKey(slot => slot.DoctorId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.HasIndex(slot => new { slot.DoctorId, slot.Date, slot.StartTime }).IsUnique();
     }
 }

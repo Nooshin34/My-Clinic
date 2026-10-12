@@ -19,5 +19,7 @@ public class Appointment : Entity
 
     public AppointmentStatus Status { get; set; } = AppointmentStatus.Scheduled;
 
+    public VisitKind VisitKind { get; set; } = VisitKind.InPerson;
+
     public string? Notes { get; set; }
 }

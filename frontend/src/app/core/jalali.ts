@@ -79,6 +79,31 @@ export function toIsoDate(date: CalendarDate): string {
   return `${date.year}-${pad(date.month)}-${pad(date.day)}`;
 }
 
+export function weekdayName(date: Date): string {
+  return weekdays[date.getDay()] ?? '';
+}
+
+export function isoDateLocal(date: Date): string {
+  return toIsoDate({ year: date.getFullYear(), month: date.getMonth() + 1, day: date.getDate() });
+}
+
+export function addLocalDays(date: Date, days: number): Date {
+  return new Date(date.getFullYear(), date.getMonth(), date.getDate() + days);
+}
+
+export function formatShamsiDay(isoDate: string): string {
+  const [year, month, day] = isoDate.split('-').map(Number);
+  const date = new Date(year, month - 1, day);
+  const jalali = gregorianToJalali(year, month, day);
+  return `${weekdayName(date)} ${toPersianDigits(jalali.day)} ${jalaliMonths[jalali.month - 1]}`;
+}
+
+export function formatClock(value: string): string {
+  const match = /^(\d{1,2}):(\d{2})/.exec(value);
+  if (!match) return value;
+  return `${toPersianDigits(match[1].padStart(2, '0'))}:${toPersianDigits(match[2])}`;
+}
+
 function formatJalaliParts(date: CalendarDate): string {
   return `${toPersianDigits(date.day)} ${jalaliMonths[date.month - 1]} ${toPersianDigits(date.year)}`;
 }

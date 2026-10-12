@@ -18,6 +18,10 @@ export const routes: Routes = [
         loadComponent: () => import('./features/doctors/doctors').then((module) => module.Doctors),
       },
       {
+        path: 'schedule',
+        loadComponent: () => import('./features/schedule/schedule').then((module) => module.Schedule),
+      },
+      {
         path: 'appointments',
         loadComponent: () => import('./features/appointments/appointments').then((module) => module.Appointments),
       },

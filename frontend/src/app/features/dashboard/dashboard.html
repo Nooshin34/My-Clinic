@@ -63,7 +63,14 @@
       <tbody>
         @for (item of data()!.todayAppointments; track item.id) {
           <tr>
-            <td>{{ when(item.scheduledAtUtc) }}</td>
+            <td>
+              <div class="when-cell">
+                <span>{{ when(item.scheduledAtUtc) }}</span>
+                @if (item.visitKind) {
+                  <span class="pill" [class.Online]="item.visitKind === 'Online'" [class.InPerson]="item.visitKind === 'InPerson'">{{ visit(item.visitKind) }}</span>
+                }
+              </div>
+            </td>
             <td>{{ item.patientName }}</td>
             <td>
               <span class="specialty">

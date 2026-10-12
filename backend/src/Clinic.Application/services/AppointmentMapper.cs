@@ -15,5 +15,6 @@ public static class AppointmentMapper
         DateTime.SpecifyKind(appointment.ScheduledAtUtc, DateTimeKind.Utc),
         appointment.Reason,
         appointment.Status.ToString(),
+        appointment.VisitKind.ToString(),
         appointment.Notes);
 }

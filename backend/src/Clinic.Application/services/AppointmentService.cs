@@ -8,6 +8,7 @@ namespace Clinic.Application.Services;
 
 public sealed class AppointmentService(
     IAppointmentRepository appointments,
+    IAvailabilityRepository availability,
     IPatientRepository patients,
     IDoctorRepository doctors,
     IUnitOfWork unitOfWork) : IAppointmentService
@@ -29,9 +30,9 @@ public sealed class AppointmentService(
 
     public async Task<AppointmentDto> CreateAsync(UpsertAppointmentRequest request, CancellationToken cancellationToken)
     {
-        var (patient, doctor, scheduledAt, status) = await ValidateAsync(request, null, cancellationToken);
+        var (patient, doctor, scheduledAt, status, visitKind) = await ValidateAsync(request, null, cancellationToken);
         var appointment = new Appointment();
-        Apply(appointment, request, patient, doctor, scheduledAt, status);
+        Apply(appointment, request, patient, doctor, scheduledAt, status, visitKind);
         await appointments.AddAsync(appointment, cancellationToken);
         await unitOfWork.SaveChangesAsync(cancellationToken);
         return AppointmentMapper.ToDto(appointment);
@@ -42,8 +43,8 @@ public sealed class AppointmentService(
         var appointment = await appointments.GetByIdAsync(id, cancellationToken)
             ?? throw new NotFoundException("نوبت پیدا نشد.");
 
-        var (patient, doctor, scheduledAt, status) = await ValidateAsync(request, id, cancellationToken);
-        Apply(appointment, request, patient, doctor, scheduledAt, status);
+        var (patient, doctor, scheduledAt, status, visitKind) = await ValidateAsync(request, appointment, cancellationToken);
+        Apply(appointment, request, patient, doctor, scheduledAt, status, visitKind);
         await unitOfWork.SaveChangesAsync(cancellationToken);
         return AppointmentMapper.ToDto(appointment);
     }
@@ -57,9 +58,9 @@ public sealed class AppointmentService(
         await unitOfWork.SaveChangesAsync(cancellationToken);
     }
 
-    private async Task<(Patient Patient, Doctor Doctor, DateTime ScheduledAt, AppointmentStatus Status)> ValidateAsync(
+    private async Task<(Patient Patient, Doctor Doctor, DateTime ScheduledAt, AppointmentStatus Status, VisitKind VisitKind)> ValidateAsync(
         UpsertAppointmentRequest request,
-        Guid? ignoreId,
+        Appointment? existing,
         CancellationToken cancellationToken)
     {
         var errors = new List<string>();
@@ -97,13 +98,33 @@ public sealed class AppointmentService(
         if (errors.Count > 0)
             throw new AppValidationException(errors);
 
+        var ignoreId = existing?.Id;
+        var sameMoment = existing is not null
+            && existing.DoctorId == request.DoctorId
+            && NormalizeUtc(existing.ScheduledAtUtc) == scheduledAt;
+        var (slotDate, slotTime) = ClinicTime.FromUtc(scheduledAt);
+        var slot = await availability.FindAsync(request.DoctorId, slotDate, slotTime, cancellationToken);
+        VisitKind visitKind;
+
+        if (slot is null)
+        {
+            if (!sameMoment)
+                throw new AppValidationException(["این ساعت در برنامه پزشک ثبت نشده است."]);
+
+            visitKind = existing!.VisitKind;
+        }
+        else
+        {
+            visitKind = slot.VisitKind;
+        }
+
         if (status != AppointmentStatus.Cancelled &&
             await appointments.ExistsForDoctorAtAsync(request.DoctorId, scheduledAt, ignoreId, cancellationToken))
         {
             throw new AppValidationException(["این پزشک در همین زمان نوبت دیگری دارد."]);
         }
 
-        return (patient!, doctor!, scheduledAt, status!.Value);
+        return (patient!, doctor!, scheduledAt, status!.Value, visitKind);
     }
 
     private static void Apply(
@@ -112,7 +133,8 @@ public sealed class AppointmentService(
         Patient patient,
         Doctor doctor,
         DateTime scheduledAt,
-        AppointmentStatus status)
+        AppointmentStatus status,
+        VisitKind visitKind)
     {
         appointment.PatientId = patient.Id;
         appointment.Patient = patient;
@@ -121,6 +143,7 @@ public sealed class AppointmentService(
         appointment.ScheduledAtUtc = scheduledAt;
         appointment.Reason = request.Reason.Trim();
         appointment.Status = status;
+        appointment.VisitKind = visitKind;
         appointment.Notes = string.IsNullOrWhiteSpace(request.Notes) ? null : request.Notes.Trim();
     }
 

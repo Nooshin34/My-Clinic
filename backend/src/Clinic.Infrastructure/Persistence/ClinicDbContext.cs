@@ -13,6 +13,8 @@ public class ClinicDbContext(DbContextOptions<ClinicDbContext> options) : DbCont
 
     public DbSet<Appointment> Appointments => Set<Appointment>();
 
+    public DbSet<AvailabilitySlot> AvailabilitySlots => Set<AvailabilitySlot>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(ClinicDbContext).Assembly);

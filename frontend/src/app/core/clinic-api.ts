@@ -5,6 +5,8 @@ import { environment } from '../../environments/environment';
 import {
   Appointment,
   AppointmentInput,
+  AvailabilityInput,
+  AvailabilitySlot,
   Dashboard,
   Doctor,
   DoctorInput,
@@ -87,6 +89,19 @@ export class ClinicApi {
 
   deleteAppointment(id: string) {
     return this.http.delete<void>(`${this.base}/appointments/${id}`);
+  }
+
+  availability(doctorId: string, from: string, to: string) {
+    const params = new HttpParams().set('from', from).set('to', to);
+    return this.http.get<AvailabilitySlot[]>(`${this.base}/doctors/${doctorId}/availability`, { params });
+  }
+
+  createAvailability(doctorId: string, body: AvailabilityInput) {
+    return this.http.post<AvailabilitySlot[]>(`${this.base}/doctors/${doctorId}/availability`, body);
+  }
+
+  deleteAvailability(id: string) {
+    return this.http.delete<void>(`${this.base}/availability/${id}`);
   }
 
   private async everyPage<T>(load: (page: number) => Observable<Page<T>>): Promise<T[]> {

@@ -20,6 +20,8 @@ public interface IAppointmentRepository
 
     Task<bool> ExistsForDoctorAtAsync(Guid doctorId, DateTime scheduledAtUtc, Guid? ignoreId, CancellationToken cancellationToken);
 
+    Task<IReadOnlyList<DateTime>> BusyTimesAsync(Guid doctorId, DateTime fromUtc, DateTime toUtc, CancellationToken cancellationToken);
+
     Task AddAsync(Appointment appointment, CancellationToken cancellationToken);
 
     void Remove(Appointment appointment);
